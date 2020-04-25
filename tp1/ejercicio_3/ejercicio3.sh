@@ -1,27 +1,62 @@
 #!/bin/bash
 
+info="para más información ejecute $0 -h o $0 --help"
+
+#Ayuda del script
+Help(){
+    echo "######    HELP $0     ######"
+    echo -e "\nEste script se encargará de borrar los archivos de log antiguos de las compañías dejando únicamente el más reciente perteneciente a cada una."
+    echo -e "Este proceso se repetirá constantemente en un intervalo de tiempo especificado por el usuario."
+    echo -e "\nEl script recibe dos parámetros:\n-f 'path': Directorio en el que sen encuentran los archivos de log\n-t 'segundos': Intervalo de tiempo a evaluar el directorio (Entero positivo)"
+    exit 1
+}
+
 Error_1(){
     echo "La ruta especificada no existe o no se tienen los permisos requeridos, $info"
     exit 1
 }
 
-info="para más información ejecute $0 -h"
-
-
-if test $# -ne 2
+#Verifico que la cantidad de parámetros sea correcta
+if test $# -ne 4 && test "$1" != "-h" && test "$1" != "--help"
 then
     echo "Error: Los parámetros son inválidos, $info"
     exit 1
 fi
 
-cd $1 2> /dev/null || Error_1
-
-re_num='[0-9]+$'
-if ! [[ $2 =~ $re_num ]]
-then
-    echo "Error: El segundo parámetro debe ser un número entero positivo, $info"
+#Formateo los parámetros
+options=$(getopt -o f:t:h --long 'help' -- "$@")
+[ $? -eq 0 ] || {
+    echo "Error: Los parámetros son inválidos, $info"
     exit 1
-fi
+}
+eval set -- "$options"
+while true; do
+    case "$1" in
+    -h|--help)
+        Help
+        exit 1
+        ;;
+    -f) 
+        directorio=$2
+        # echo "Directorio: $directorio"
+        ;;
+    -t)
+        intervalo=$2
+        # echo "Intervalo: $intervalo"
+        [[ ! $intervalo =~ [0-9]+$ ]] && {
+            echo "Error: El segundo parámetro debe ser un número entero positivo, $info"
+            exit 1 
+        }
+        ;;
+    --)
+        shift
+        break;;
+    esac
+    shift
+done
+    
+
+cd $directorio 2> /dev/null || Error_1
 
 declare -A apariciones
 declare -a archivos
@@ -46,9 +81,8 @@ do
     do
         if test ${apariciones[$i]} -ge 2
         then 
-            archivos=($(echo $(ls -1 | grep "$i") | tr " " "\n"))
-            # echo ${#archivos[*]}
-            # echo ${archivos[*]}
+            archivos=($(echo $(ls -1 | grep -E $regex | grep "$i") | tr " " "\n"))
+            
             for (( j=0; j<${#archivos[*]}-1; j++))
             do
                 rm -f "${archivos[$j]}"
@@ -56,6 +90,7 @@ do
         fi
     done 
 
-    sleep $2
+    # echo "hecho"
+    sleep $intervalo
 
 done
