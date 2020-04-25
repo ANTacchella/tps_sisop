@@ -1,0 +1,71 @@
+#!/bin/bash
+
+
+arch=$1
+
+#valido que el archivo que me mandan sea un archivo y que tenga permiso de lectura sobre el
+#falta validar que la cantidad de parametros sea igual a 1
+if test -r $arch && ! test -d $arch
+    then cat $arch >> .archOrdenado.txt
+elif test -d $arch;
+    then echo "el parametro $arch enviado corresponde con un directorio, no con un archivo"
+else
+    echo "no tiene permiso de lectura sobre el archivo $arch"
+fi
+
+IFS=$'\n'
+
+cat $arch | awk -F"|" '
+{
+    if($0 != ""){
+        clave="$1_$2"
+        materias[$2]=$2
+        if(clave in alu_materia)
+        {}
+        else{
+
+            alu_materia[clave]=clave
+
+            #punto 1
+
+            if( ((4 <= $3 && $3 <=6 && $5 != "1" ) || ($5 == "1" && 4<= $6 && $6<=6) || ($5 == "1" && 6<$6 &&  4<=$4 && $4<=6)) && (( 4<= $4 && $4 <= 6 && $5 != "2") || ($5 =="2" && 4 <= $6 && $6 <= 6) || ($5=="2" && 6<$6 && 4<=$3 && $3<=6)) && $7 == ""  ){
+                punto1[clave]++;
+            }
+
+            #punto 2
+            if( ($7 <4 &&  $7 != "") || (($3 < 4 && $5 != "1") || ($5=="1" && $6 < 4)) || (($4 < 4 && $5 != "2") || ($5=="2" && $6 < 4)) ){
+                punto2[clave]++;
+            }
+
+            #punto 3
+            if($6=="" && ($3<7 || $4<7) ){
+                punto3[clave]++;
+            }
+
+
+            #punto 4
+            if( ($3=="" && $5=="1" && $6=="") || ($3=="" && $5!="1") || ($4=="" && $5=="2" && $6=="") || ($4=="" && $5!=2) ){
+                punto4[clave]++;
+            }
+
+        }
+    }
+}
+END{
+
+    printf "\n%4s |%10s |%8s |%10s |%10s |%12s \n","LINE","MATERIA","FINAL","RECURSAN","RECUPERAN","ABANDONARON";
+    line=1
+    for( materia in materias){
+
+        printf "%4d |%10s |%8d |%10d |%10d |%12d \n",line,materia,punto1[materia],punto2[materia],punto3[materia],punto4[materia];
+        line++;
+    }
+
+
+
+}
+
+'
+
+
+
