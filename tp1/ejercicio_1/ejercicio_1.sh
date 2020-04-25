@@ -1,4 +1,12 @@
-#!/bin/bash  
+#!/bin/bash 
+
+# ejercicio_1.sh | Trabajo Práctico 1) Ejercicio1) | Primera entrega
+# Maximiliano José Bernardo | 41912800
+# Nicolás Agustín Fábregues | 41893896
+# Joela Belén Kachanosqui | 41917556
+# Alejandro Nicolás Tacchella | 41893930
+# Tomás Martín Vera | 41988332
+
 ErrorS()  {  
  
 	echo "Error. La sintaxis del script es la siguiente:"    
@@ -66,6 +74,7 @@ fi
 # $_	Último parámetro del último comando.
 # $IFS	Separador de campos.
 # $PATH	Variable de entorno con los path a los ejecutables del sistema.
+
 #f)	Explique las diferencias entre los distintos tipos de comillas que se pueden utilizar en Shell scripts.  
 #Comillas Dobles ("): Se utilizan para definir textos y "se expanden". Es decir, las variables dentro de las comillas dobles son interpretadas (y no se muestran como el nombre de la variable).
 #Comillas Simples ('): Se utilizan para definir textos y "no se expanden", el contenido se interpreta de forma literal. Es decir, las variables dentro de las comillas simples se muestran como el nombre de la variable (y no se muestran como su valor).
