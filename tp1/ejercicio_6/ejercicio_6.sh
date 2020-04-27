@@ -14,7 +14,7 @@ Help(){
     echo "######    HELP $0     ######"
     echo -e "\nEste script se encargará de sumar todos los números fraccionarios contenidos en el archivo provisto por el usuario y de devolver el número resultante en un archivo 'salida.out' ubicado en el mismo directorio del script."
     echo -e "Las fracciones del archivo enviado deben estar separadas por coma (,) y las mismas pueden ser positivas, negativas o en formato mixto."
-    echo -e "\nEl script recibe un único parámetro:\n#\t-f 'path': ruta del archivo de entrada ya sea de manera relativa o absoluta"
+    echo -e "\nEl script recibe un único parámetro:\n-f 'path': ruta del archivo de entrada ya sea de manera relativa o absoluta"
     exit 1
 }
 
