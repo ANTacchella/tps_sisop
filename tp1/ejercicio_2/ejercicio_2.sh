@@ -1,14 +1,15 @@
 #!/bin/bash
 
-# ej2.sh | Trabajo Práctico 1) Ejercicio 2) | Primera entrega
+# ejercicio_2.sh | Trabajo Práctico 1) Ejercicio 2) | Primera entrega
 # Maximiliano José Bernardo | 41912800
 # Nicolás Agustín Fábregues | 41893896
 # Joela Belén Kachanosqui | 41917556
 # Alejandro Nicolás Tacchella | 41893930
 # Tomás Martín Vera | 41988332
 
+info="Ejecute $0 -h|--help para obtener información acerca de la ejecución de este script"
 
-help() {
+Help() {
     echo "#### HELP $0 ####"
     echo -e "\nEl script recibe el path de un log para realizar las siguientes operaciones:\n"
     echo -e "\t1.Promedio de tiempo de las llamadas realizadas por día."
@@ -16,43 +17,77 @@ help() {
     echo -e "\t3.Los 3 usuarios con más llamadas en la semana."
     echo -e "\t4.Cuántas llamadas no superan la media de tiempo por día y el "
     echo -e "\tusuario  que  tiene  más llamadas por debajo de la media en la semana."
-    echo -e "\nEl unico parametro recibido es el path del log. La sintaxis es: $0 path_del_archivo."
+    echo -e "\nEl unico parametro recibido es el path del log. La sintaxis es: $0 -f path_del_archivo."
 }
 
+ErrorP(){
+    echo "¡Parámetros enviados incorrectos! $info" >&2 ; 
+}
 
-if [ "$1" = "--help" ]; then
-    help
-elif [ "$1" = "-?" ]; then
-    help
-elif [ "$1" = "-h" ]; then
-    help
+ErrorL(){
+     echo "No tiene permiso de lectura sobre el archivo $1. $info"
+}
+
+ErrorA(){
+     echo "El parámetro $1 no es un archivo. $info"
+}
+
+if test $# -ne 2 && test "$1" != "-h" && test "$1" != "--help"
+then
+    ErrorP
+    exit 1
 fi
+
+OPTIONS=f:h
+LONGOPTS=help
+
+PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
+if [ $? != 0 ]
+then
+    ErrorP
+    exit 1;
+fi
+
+eval set -- "$PARSED"
+
+arch=""
+
+while true;
+do
+    case "$1" in
+        -h|--help)
+            Help
+            exit 1;;
+        -f)
+            arch=$2
+            shift 2;;     
+        --)
+            shift;
+            break;;
+        *)
+            break;;
+    esac
+done
 
 #codigo awk                
 
-info="para mas informacion ejecute $0 -h"
-
-Error_1(){
-     echo "la ruta especificada no existe o no se tiene los permisos requeridos, $info "
-     exit 1
-}
-
 #el criterio que tomamos para manejar los errores es que no mostramos el error original
 #y mostramos el error nuestro
-cd $1 2> /dev/null || Error_1
 
 declare -A archivosCreados
 
-declare -a archivos
-archivos=(`ls`)
-for arch in  ${archivos[*]}
-do
-        if test -r $arch && ! test -d $arch
-            then cat $arch >> .archOrdenado.txt
-        elif ! test -r $arch;
-            then echo "no tiene permiso de lectura sobre el archivo $arch"
-        fi
-done    
+if test -f $arch && test -r $arch 
+then 
+    cat $arch >> .archOrdenado.txt
+elif ! test -r $arch;
+then 
+    ErrorL $arch
+    exit 1;
+else
+    ErrorA $arch
+    exit 1;
+fi
+
 IFS=$'\n'
 archivosCreados[".archOrdenado.txt"]=".archOrdenado.txt"
 chmod 777 .archOrdenado.txt
@@ -62,7 +97,21 @@ chmod 777 .archOrdenado.txt
 sort -t "_" -k 1 .archOrdenado.txt > .archOrdenado1.txt #lo envio a otro archivo porque si lo enviava al mismo archivo rompia
 chmod 777 .archOrdenado1.txt
 
-awk -F" _ " '{ gsub(/[:-]/," ",$1) } ;{us[$2]=$2}; {printf "%s _ %s _ %s\n",$1,$2,mktime($1)}; END{for(i in us) {print i > ".usuarios.txt" }}  ' .archOrdenado1.txt  > .archOrdenado.txt
+awk -F" _ " '
+{ 
+    gsub(/[:-]/," ",$1) 
+};
+{
+    us[$2]=$2
+}; 
+{
+    printf "%s _ %s _ %s\n",$1,$2,mktime($1)
+}; 
+END{
+    for(i in us) {
+        print i > ".usuarios.txt" 
+    }
+} ' .archOrdenado1.txt  > .archOrdenado.txt
 
 archivosCreados[".archOrdenados1.txt"]=.archOrdenado1.txt
 
@@ -140,13 +189,8 @@ BEGIN{
         #punto 4.1
         key=$2"-"cantUserHoy[$2];
         duracionLlamada[key]=tiempoLlamadas[$2];
-#        printf "\nUsr-Llamada-Duracion= %s--%s\n", key, duracionLlamada[key];        
-#        printf "\nusuario %s--tiempo %s\n",$2,tiempoLlamadas[$2];
         
         #punto 4.2
-        #key2=$2"|"cantUserHoy[$2]"|"dia; 
-        #duracionLlamadaSemanal[key2]=tiempoLlamadas[$2];
-        #printf "\nUsr|Llamada|dia==Duracion= %s==%s\n", key2, duracionLlamadaSemanal[key2];
         printf "%s|%d|%s|%s\n",$2,cantUserHoy[$2],dia,tiempoLlamadas[$2] >> ".Punto_4b.txt"
         
         delete tiempoLlamadas[$2];
@@ -177,12 +221,9 @@ END{
     {
         if( duracionLlamada[key] < promedio ) {
             callsBelowMedia++;
-    #        printf "\ncallsnow  =  %d",callsBelowMedia;
         }
-    #    printf "\nUsr-Llamada-Duracion= %s--%s\n", key, duracionLlamada[key];
 
     }
-#    printf "\nCantidad Llamadas Por Debajo de la Media = %d", callsBelowMedia; 
     printf "%s |%d\n",dia,callsBelowMedia >> ".Punto_4.txt"
    
    
@@ -253,15 +294,12 @@ BEGIN{
 }
 END{
     promedioSem=suma/cont;
-#    printf "\nPromedioSemanal = %s\n", promedioSem;
     
     for( usr in arrayUsers )
     {
         split(usr,t,"|")
-#        printf "...........t1 = %s - t2 = %s - t3 = %s\n",t[1],t[2],t[3];
         if( arrayUsers[usr] < promedioSem ) {
             cantCallUser[t[1]]++;
-#            printf "user=%s ___ cant=%d\n",t[1],cantCallUser[t[1]];
         }
     }
     printf "\nUSUARIO CON MAS LLAMADAS POR ABAJO DE LA MEDIA EN LA SEMANA"; 
