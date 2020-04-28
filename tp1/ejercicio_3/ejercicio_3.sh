@@ -15,6 +15,7 @@ Help(){
     echo -e "\nEste script se encargará de borrar los archivos de log antiguos de las compañías dejando únicamente el más reciente perteneciente a cada una."
     echo -e "Este proceso se repetirá constantemente en un intervalo de tiempo especificado por el usuario."
     echo -e "\nEl script recibe dos parámetros:\n-f 'path': Directorio en el que sen encuentran los archivos de log\n-t 'segundos': Intervalo de tiempo a evaluar el directorio (Entero positivo)"
+    echo -e "\nPara detener el proceso luego de iniciado solo debe ejecutar el comando 'kill' seguido del PID que es impreso al llamar al script"
     exit 1
 }
 
@@ -65,6 +66,10 @@ done
 
 cd $directorio 2> /dev/null || Error_1
 
+echo "PID: $(($$+2))"
+
+borrarArchivos(){
+
 declare -A apariciones
 declare -a archivos
 
@@ -98,6 +103,10 @@ do
     done 
 
     # echo "hecho"
-    sleep $intervalo
+    sleep $1
 
 done
+
+}
+
+borrarArchivos $intervalo &
