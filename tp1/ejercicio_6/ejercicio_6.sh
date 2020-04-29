@@ -55,7 +55,7 @@ then
 fi
 
 lineas=`wc -l $archivo | cut -f 1 -d " "`
-if [[ $lineas -gt 0 ]]
+if [[ $lineas -gt 1 ]]
 then
     echo "Error: el archivo no debe contener más de una línea, $info"
     exit 1
@@ -80,27 +80,19 @@ MCD(){
 fracciones=$(echo `cat $archivo | tr "," "\n"`)
 
 declare -a norm
-declare -a neg
 declare -a mix
-declare -a mix_neg
 
 num=1
 den=1
 
 for f in ${fracciones[*]}
 do
-    if [[ $f =~ ^[0-9]+\/[0-9]+$ ]]
+    if [[ $f =~ ^\-?[0-9]+\/\-?[0-9]+$ ]]
     then
         norm[${#norm[*]}]=$f
-    elif [[ $f =~ ^\-[0-9]+\/[0-9]+$ ]]
-    then
-        neg[${#neg[*]}]=$f
-    elif [[ $f =~ ^[0-9]+\:[0-9]+\/[0-9]+$ ]]
+    elif [[ $f =~ ^\-?[0-9]+\:\-?[0-9]+\/\-?[0-9]+$ ]]
     then
         mix[${#mix[*]}]=$f
-    elif [[ $f =~ ^\-[0-9]+\:[0-9]+\/[0-9]+$ ]]
-    then
-        mix_neg[${#mix_neg[*]}]=$f
     fi
 done
 
@@ -112,26 +104,11 @@ do
 
 done
 
-for f in ${neg[*]}
-do
-    nums=($(echo $f | tr /\// "\n"))
-    num=$(($num*${nums[1]}+$den*${nums[0]}))
-    den=$(($den*${nums[1]}))
-done
-
 for f in ${mix[*]}
 do
     nums=($(echo $f | tr /[:/]/ "\n"))
     num=$(($num+${nums[0]}*$den))
     num=$(($num*${nums[2]}+$den*${nums[1]}))
-    den=$(($den*${nums[2]}))
-done
-
-for f in ${mix_neg[*]}
-do
-    nums=($(echo $f | tr /[:/]/ "\n"))
-    num=$(($num+${nums[0]}*$den))
-    num=$(($num*${nums[2]}-$den*${nums[1]}))
     den=$(($den*${nums[2]}))
 done
 
@@ -141,6 +118,13 @@ MCD $num $den
 let num=$(($num/$mcd))
 let den=$(($den/$mcd))
 
+if [[ $den -lt 0 ]]
+then
+    let num=$(($num*-1))
+    let den=$(($den*-1))
+fi
+
+
 if [[ $den -eq 1 ]]
 then
     echo $num >salida.out
@@ -149,5 +133,3 @@ else
     echo $num/$den >salida.out
     echo $num/$den
 fi
-
-
