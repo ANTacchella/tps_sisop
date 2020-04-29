@@ -1,0 +1,8 @@
+1|12|||||1|  final menor que 4
+2|12|1|||||  primer parcial menor que 4 sin rendir recu
+3|12|1||1|1|| primer parcial menor que 4 rindiendo recu y sacando menos de 4
+4|12|10|10|||| primer parcial mayor que 4 y segundo parcial mayor que 4 y no rinde recu->false
+5|12|1|10|1|10|| primer parcial menor que cuatro rindiendo recu sacando mayor que 4 ->false
+6|12|10|1||||  segundo parcial menor que 4 sin rendir recu
+7|12|10|1|2|1|| segundo parcial menor que 4 rindiendo recu y sacando menos de 4
+8|12|10|1|2|10|| segundo parcial menor que cuatro rindiendo recu sacando mayor que 4 ->false
