@@ -7,7 +7,7 @@
 # Alejandro Nicolás Tacchella | 41893930
 # Tomás Martín Vera | 41988332
 
-info="para más información ejecute $0 -h o $0 --help"
+info="Para más información ejecute $0 -h o $0 --help"
 
 #Ayuda del script
 Help(){
@@ -15,20 +15,31 @@ Help(){
     echo -e "\nEste script se encargará de procesar los datos proporcionados por la universidad y devolver un resumen de resultados por materia."
     echo -e "Aclaración:\n-Si un mismo alumno cumple las condiciones puede tener más de un estado para la misma materia.\n"
     echo -e "\nEl script recibe un único parámetro:\n-f 'path': ruta del archivo de entrada ya sea de manera relativa o absoluta"
-    exit 1
+}
+
+ErrorP(){
+    echo "¡Parámetros enviados incorrectos! $info" >&2 ; 
+}
+
+ErrorA(){
+    echo "El parámetro $1 no es un archivo o no existe. $info"
+}
+
+ErrorL(){
+    echo "No tiene permisos de lectura sobre el archivo $1. $info"
 }
 
 #Verifico que la cantidad de parámetros sea correcta
 if test $# -ne 2 && test "$1" != "-h" && test "$1" != "--help"
 then
-    echo "Error: Los parámetros son inválidos, $info"
+    ErrorP
     exit 1
 fi
 
 #Formateo los parámetros
 options=$(getopt -o f:h --long 'help' -- "$@")
 [ $? -eq 0 ] || {
-    echo "Error: Los parámetros son inválidos, $info"
+    ErrorP
     exit 1
 }
 eval set -- "$options"
@@ -50,24 +61,24 @@ done
 
 #valido que el archivo que me mandan sea un archivo y que tenga permiso de lectura sobre el
 #falta validar que la cantidad de parametros sea igual a 1
-if test -r $arch && ! test -d $arch
-    then cat $arch >> .archOrdenado.txt
-elif test -d $arch;
-    then echo "el parametro $arch enviado corresponde con un directorio, no con un archivo"
-else
-    echo "no tiene permiso de lectura sobre el archivo $arch"
+if ! test -f "$arch"
+then
+    ErrorA $arch
+    exit 1;
+elif ! test -r "$arch"
+then 
+    ErrorL $arch
+    exit 1;
 fi
 
 IFS=$'\n'
 
-cat $arch | awk -F"|" '
+awk -F"|" '
 {
     if($0!=""){
         clave=$1"_"$2
         materias[$2]=$2
-        if(clave in alu_materia)
-        {}
-        else{
+        if(!(clave in alu_materia)){
             alu_materia[clave]=clave
             #punto 1
             if( ((4<=$3 && $3<=6 && $5!="1" ) || ($5=="1" && 4<=$6 && $6<=6) || ($5=="1" && 6<$6 &&  4<=$4 && $4<=6)) && (( 4<=$4 && $4<= 6 && $5!="2") || ($5=="2" && 4<=$6 && $6<=6) || ($5=="2" && 6<$6 && 4<=$3 && $3<=6)) && $7==""  ){
@@ -89,12 +100,8 @@ cat $arch | awk -F"|" '
     }
 }
 END{
-    printf "\n%4s |%10s |%8s |%10s |%10s |%12s \n","LINE","MATERIA","FINAL","RECURSAN","RECUPERAN","ABANDONARON";
-    line=1
-    for( materia in materias){
-        printf "%4d |%10s |%8d |%10d |%10d |%12d \n",line,materia,punto1[materia],punto2[materia],punto3[materia],punto4[materia];
-        line++;
+    printf "\"Materia\",\"Final\",\"Recursan\",\"Recuperan\",\"Abandonaron\"\n" > "resultados.txt"
+    for(materia in materias){
+        printf "\"%s\",\"%d\",\"%d\",\"%d\",\"%d\"\n",materia,punto1[materia],punto2[materia],punto3[materia],punto4[materia] >> "resultados.txt"
     }
-}
-'
-
+}' $arch
