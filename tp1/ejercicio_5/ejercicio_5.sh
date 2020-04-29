@@ -13,7 +13,7 @@ info="para más información ejecute $0 -h o $0 --help"
 Help(){
     echo "######    HELP $0     ######"
     echo -e "\nEste script se encargará de procesar los datos proporcionados por la universidad y devolver un resumen de resultados por materia."
-    echo -e "Aclaración:\n-Si un mismo alumno cumple las condiciones puede tener más de un estado para la misma materia.\n-Un ausente equivale a una nota menor que 4."
+    echo -e "Aclaración:\n-Si un mismo alumno cumple las condiciones puede tener más de un estado para la misma materia.\n"
     echo -e "\nEl script recibe un único parámetro:\n-f 'path': ruta del archivo de entrada ya sea de manera relativa o absoluta"
     exit 1
 }
@@ -74,11 +74,11 @@ cat $arch | awk -F"|" '
                 punto1[$2]++;
             }
             #punto 2
-            if( ($7 <4 &&  $7 != "") || (($3 < 4 && $5 != "1") || ($5=="1" && $6 < 4)) || (($4 < 4 && $5 != "2") || ($5=="2" && $6 < 4)) ){
+            if( ($7 <4 &&  $7 != "") || (($3 < 4 && $5 != "1" ) || ($5=="1" && $6 < 4 )) || (($4 < 4 && $5 != "2" ) || ($5=="2" && $6 < 4 )) ){
                 punto2[$2]++;
             }
             #punto 3
-            if($6=="" && ($3<7 || $4<7) ){
+            if($6=="" && ( ($3<7 && $3!="" ) || ($4<7 && $4!="") ) ){
                 punto3[$2]++;
             }
             #punto 4
