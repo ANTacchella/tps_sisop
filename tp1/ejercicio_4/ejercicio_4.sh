@@ -77,6 +77,8 @@ do
     esac
 done
 
+INITIAL_DIR=$(pwd)
+
 # Verifico que se haya dado un path de dónde tomar los archivos de log
 if [ -z "$SRC_PATH" ]
 then
@@ -107,8 +109,6 @@ then
     exit 1;
 fi
 
-cd $SRC_PATH 2> /dev/null || ErrorL
-
 # Expresión regular para filtrar solo los archivos de log según el formato 'empresa-int.log'
 # Si se me pasara por parámetro la empresa la expresión regular limitará solo a los archivos de esa empresa
 if [ -z "$EMPRESA" ]
@@ -118,27 +118,36 @@ else
     regex_log="$EMPRESA\-[0-9]+\.log$"
 fi
 
-declare -a empresas
+declare -A empresas
 
 # Guardo en este array el nombre de la compañía de cada archivo válido
-empresas=$(ls | grep -E $regex_log | cut -f 1 -d "-")
+for emp in $(ls "$SRC_PATH" | grep -E $regex_log | cut -f 1 -d "-")
+do
+    empresas[$emp]=$(ls "$SRC_PATH" | grep -E "$emp\-[0-9]+\.log$")
+    echo $emp
+    echo ${empresas[$emp]}
+done
+
+#cd $DEST_PATH 2> /dev/null || ErrorL
 
 # Recorro las empresas
-for emp in ${empresas[*]}
+for emp in ${!empresas[*]}
 do  
     # Si no tengo un .tar.gz para la empresa dada en el directorio de destino creo uno nuevo
-    if [ ! -f "$DEST_PATH$emp.tar.gz" ]
+    if [ ! -f "$emp.tar.gz" ]
     then
-        ls | grep -E "$emp\-[0-9]+\.log$" | xargs tar -czf "$DEST_PATH$emp.tar.gz"
+        tar -czf "$emp.tar.gz" ${empresas[$emp]}
     # Si tengo un .tar.gz para la empresa dada en el directorio de destino añado los archivos a ese .tar.gz
     else
-        gunzip "$DEST_PATH$emp.tar.gz"
-        ls | grep -E "$emp\-[0-9]+\.log$" | xargs tar -rf "$DEST_PATH$emp.tar"
-        gzip "$DEST_PATH$emp.tar"
+        gunzip "$emp.tar.gz"
+        tar -rf "$emp.tar" ${empresas[$emp]}
+        gzip "$emp.tar"
     fi
-    # Hago un rm de los archivos del directorio de origen solo si fue exitosa la compresión de los archivos
-    if [ $? == 0 ]
-    then
-        ls | grep -E "$emp\-[0-9]+\.log$" | xargs rm
-    fi
+done
+
+cd $INITIAL_DIR
+# Hago un rm de los archivos del directorio de origen solo si fue exitosa la compresión de los archivos
+for emp in ${!empresas[*]}
+do
+    ls "$SRC_PATH" | grep -E "$emp\-[0-9]+\.log$" | xargs rm
 done
