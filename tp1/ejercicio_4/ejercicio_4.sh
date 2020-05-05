@@ -77,8 +77,6 @@ do
     esac
 done
 
-INITIAL_DIR=$(pwd)
-
 # Verifico que se haya dado un path de dónde tomar los archivos de log
 if [ -z "$SRC_PATH" ]
 then
@@ -120,34 +118,28 @@ fi
 
 declare -A empresas
 
-# Guardo en este array el nombre de la compañía de cada archivo válido
-for emp in $(ls "$SRC_PATH" | grep -E $regex_log | cut -f 1 -d "-")
+# Guardo en este array el nombre de la compañía de cada archivo válido y los archivos de esa empresa
+for emp in $(ls "$SRC_PATH/" | grep -E $regex_log | cut -f 1 -d "-")
 do
-    empresas[$emp]=$(ls "$SRC_PATH" | grep -E "$emp\-[0-9]+\.log$")
-    echo $emp
-    echo ${empresas[$emp]}
+    empresas[$emp]=$(ls -d "$SRC_PATH/"* | grep -E "$emp\-[0-9]+\.log$")
 done
-
-#cd $DEST_PATH 2> /dev/null || ErrorL
 
 # Recorro las empresas
 for emp in ${!empresas[*]}
 do  
     # Si no tengo un .tar.gz para la empresa dada en el directorio de destino creo uno nuevo
-    if [ ! -f "$emp.tar.gz" ]
+    if [ ! -f "$DEST_PATH/$emp.tar.gz" ]
     then
-        tar -czf "$emp.tar.gz" ${empresas[$emp]}
+        tar -czf "$DEST_PATH/$emp.tar.gz" ${empresas[$emp]}
     # Si tengo un .tar.gz para la empresa dada en el directorio de destino añado los archivos a ese .tar.gz
     else
-        gunzip "$emp.tar.gz"
-        tar -rf "$emp.tar" ${empresas[$emp]}
-        gzip "$emp.tar"
+        gunzip "$DEST_PATH/$emp.tar.gz"
+        tar -rf "$DEST_PATH/$emp.tar" ${empresas[$emp]}
+        gzip "$DEST_PATH/$emp.tar"
     fi
-done
-
-cd $INITIAL_DIR
-# Hago un rm de los archivos del directorio de origen solo si fue exitosa la compresión de los archivos
-for emp in ${!empresas[*]}
-do
-    ls "$SRC_PATH" | grep -E "$emp\-[0-9]+\.log$" | xargs rm
+    # Hago un rm de los archivos del directorio de origen solo si fue exitosa la compresión de los archivos
+    if [ $? == 0 ]
+    then
+        ls -d "$SRC_PATH/"* | grep -E "$emp\-[0-9]+\.log$" | xargs rm
+    fi
 done
