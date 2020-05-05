@@ -116,6 +116,9 @@ else
     regex_log="$EMPRESA\-[0-9]+\.log$"
 fi
 
+SRC_PATH=`echo "$SRC_PATH" | sed 's/\/*$//'`
+DEST_PATH=`echo "$DEST_PATH" | sed 's/\/*$//'`
+
 declare -A empresas
 
 # Guardo en este array el nombre de la compañía de cada archivo válido y los archivos de esa empresa
