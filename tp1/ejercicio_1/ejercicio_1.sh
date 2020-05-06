@@ -21,19 +21,23 @@ ErrorP()  {
 }  
 if test $# -lt 2; then  
 	ErrorS  
+    exit
 fi  
 if ! test -r $1; then    
 	ErrorP  
 elif test -f $1 && (test $2 = "L" || test $2 = "C" || test $2 = "M"); then    
-	if test $2 = "L"; then      
-		res=`wc –l $1`  
-		echo "La cantidad de líneas del archivo es: $res." 
-	elif test $2 = "C"; then      
-		res=`wc –m $1`  
-		echo "El número de caracteres del archivo es: $res." 
-	elif test $2 = "M"; then      
-		res=`wc –L $1`  
-		echo "La longitud de la línea más larga del archivo es: $res." 
+	if test $2 = "L"; then       
+        read res <<< $(wc -l $1) 
+        ser=${res% *}    
+        echo "La cantidad de líneas del archivo es: $ser." 
+	elif test $2 = "C"; then       
+        read res <<< $(wc -m $1)     
+        ser=${res% *} 
+        echo "El numero de caracteres del archivo es: $ser" 
+    elif test $2 = "M"; then       
+        read res <<< $(wc -L $1)     
+        ser=${res% *} 
+        echo "La longitud de la línea más larga del archivo es: $ser." 
 	fi  
 else    
 	ErrorS  
