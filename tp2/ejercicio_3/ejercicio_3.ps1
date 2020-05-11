@@ -1,23 +1,22 @@
 Param(
     [Parameter(Position = 1, Mandatory = $true)]
-    [String] $path
+    [String] $Directorio
 )
 
-$existe = Test-Path $path
+$existe = Test-Path $Directorio
 if($existe -ne $true){
     Write-Error "El directorio proporcionado no existe!"
     exit 1
 }
 
-$absoluta = $path -Match "^/home*"
+$absoluta = $Directorio -Match "^/home*"
 if($absoluta -eq $false){
-    $path = "$(Get-Location)/$path"
-    write-host $path
+    $Directorio = "$(Get-Location)/$Directorio"
 }
 
 #Creo el objeto de tipo FileSystemWatcher y le seteo sus propiedades
 $FileSystemWatcher = New-Object System.IO.FileSystemWatcher
-$FileSystemWatcher.Path = $path
+$FileSystemWatcher.Path = $Directorio
 $FileSystemWatcher.IncludeSubdirectories = $true
 $FileSystemWatcher.EnableRaisingEvents = $true
 
@@ -25,7 +24,7 @@ $FileSystemWatcher.EnableRaisingEvents = $true
 $location = Get-Location
 
 #Me muevo al directorio pasado por parámetro
-Set-Location $path
+Set-Location $Directorio
 
 #Acción que le paso al evento "Created" para que ejecute
 $Action = {
@@ -82,10 +81,9 @@ finally{ #Se ejecuta cuando apretas ctrl+c
     Registra el directorio proporcionado como parámetro y elimina todos los archivos de log antiguos cada vez que se crea uno nuevo.
 .Description
     El script ejercicio_3.ps1 se encarga de encarga de establecer un manejador de eventos en el directorio pasado como parámetro para que cada vez que se dispara el evento "Created" al crear un archivo nuevo se analice el directorio y se elimine los archivos de log antiguos y dejando únicamente el log más reciente de cada empresa.
-.Example
-    ./ejercicio_3.sh -path /home/user/Documents/logs
-.Example
-    ./ejercicio_3.sh -path logs
 .Notes
+    Parámetros:
+    -Directorio: Directorio en el que se encuentran los archivos de log. Puede ser una ruta relativa o absoluta.
+
     Para detener la ejecución y el manejador de eventos solo hace falta presionar la combinación de teclas ctrl+C o cerrar la terminal desde la cual se está ejecutando.
 #>
