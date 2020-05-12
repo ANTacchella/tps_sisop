@@ -1,9 +1,0 @@
-0|2|||||| sin primer parcial y sin segundo parcial
-0|6|3||||| primer parcial 3 y sin segundo parcial
-0|3||3|||| sin primer parcial y segundo parcial 3
-0|4|3||2|3|| primer parcial 3 y sin segundo parcial,recuperatorio segundo parcial 3->falso
-0|09|3||1|3|| primer parcial 3 y sin segundo parcial,recuperatorio primer parcial 3
-0|11||3|2|3|| sin primer parcial y segundo parcial 3,recuperatorio segundo parcial 3
-0|41||3|1|3|| sin primer parcial y segundo parcial 3,recuperatorio primer parcial 3->falso
-
-
