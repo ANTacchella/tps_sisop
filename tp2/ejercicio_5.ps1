@@ -8,18 +8,7 @@
 
 
 Param(
-    <# con Parameter() defino lascondiciones que 
-   tiene que cumplr el parametro,en este caso el 
-   parametro $file es obrigatorio(mandatory=$true)
-   y sera el primer parametro de los que se
-   mandan por consola(position=1). el parametro file 
-   se lo puedo manda simplemente haciendo 
-   mi_programa mi_file o haciendo
-   mi_programa -file'mi_file',
-   tambien valido que el parametro no sea nulo o 
-   vacio.
-    
-    #>
+ 
     [Parameter(Position = 1, mandatory = $True)]
     [ValidateNotNullOrEmpty()]
     [string] $file
