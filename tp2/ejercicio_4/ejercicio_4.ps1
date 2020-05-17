@@ -1,3 +1,4 @@
+#!/usr/bin/pwsh
 # ejercicio_4.ps1 | Trabajo Práctico 2) Ejercicio 4) | Primera entrega
 # Maximiliano José Bernardo | 41912800
 # Nicolás Agustín Fábregues | 41893896
@@ -17,7 +18,8 @@ Param(
     [string] $DirectorioZip,
 
     [Parameter( mandatory = $False)]
-    [string] $empresa
+    [ValidateNotNullOrEmpty()]
+    [string] $Empresa
 
 )
 
@@ -25,11 +27,11 @@ $existe1 = Test-Path -Path $Directorio -PathType container
 $existe2 = Test-Path -Path $DirectorioZip -PathType container
 
 if( $existe1 -ne $True ){
-    Write-Error "El directorio o directorioZip proporcionado no existe!"
+    Write-Error "¡El Directorio proporcionado no existe!"
     exit 1
 }
 if( $existe2 -ne $True ){
-    Write-Error "El directorio o directorioZip proporcionado no existe!"
+    Write-Error "¡El DirectorioZip proporcionado no existe!"
     exit 1
 }
 
@@ -45,7 +47,7 @@ $arch_validos = Get-ChildItem $Directorio | Where-Object Name -Match $regex_log 
 $empresas = @{}
 foreach ($item in $arch_validos) {
     if ( ! $empresas.Contains( $item.Split('-')[0] )) {
-        $empresas.add( $item.Split('-')[0], "" )
+        $empresas.Add( $item.Split('-')[0], "" )
     } 
 }
 
@@ -64,7 +66,7 @@ foreach ($emp in $empresas.keys)
 
 <#
 .Synopsis
-    Este script omprime los logs en el directorio que se envía como parámetro, en un directorio especificado.
+    Este script comprime los logs en el directorio que se envía como parámetro, en un directorio especificado.
 .Description
     El script ejercicio_4.ps1 recibe como parámetros un directorio, en el cual se encuentran archivos de log, 
     un directorio adonde se comprimiran y, opcionalmente el nombre de la empresa de la cual se buscaran sus logs.
@@ -75,7 +77,7 @@ foreach ($emp in $empresas.keys)
 .Notes
     Parámetros:
     -Directorio: Directorio en el que se encuentran los archivos de log. Puede ser una ruta relativa o absoluta.
-    -DirectorioZip: Directorio en el que se generarán los archivos comprimidos de los clientes.
+    -DirectorioZip: Directorio en el que se generarán los archivos comprimidos de los clientes. Puede ser una ruta relativa o absoluta.
     -Empresa: Nombre de la empresa a procesar. (opcional)
     Los nuevos archivos se agregan al ZIP existente para no perder los ya procesados.
 #>
