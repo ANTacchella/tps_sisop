@@ -24,7 +24,7 @@ Param(
     #>
     [Parameter(Position = 1, mandatory = $True)]
     [ValidateNotNullOrEmpty()]
-    #[ValidatePattern('^*.log')]
+    [ValidatePattern('^*.log')]
     [string] $file
 
 )
@@ -49,11 +49,10 @@ $punto4 = @{}
 $alu_materia = @{}
 $materias = @{}
 
-$count=0
+$bandera=0
 foreach($item in $archivo){
-    $count+=1
 
-    if(!$item.Equals("")){
+    if(!$item.Equals("") -and $bandera -ne "1" ){
 
         $linea = $item.Split("|")
         $clave= $linea[0]+"_"+$linea[1]
@@ -86,6 +85,8 @@ foreach($item in $archivo){
 
         }
     }
+    $bandera=1
+
 }
 
 foreach($elem in $materias.GetEnumerator()){
