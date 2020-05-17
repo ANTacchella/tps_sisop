@@ -97,7 +97,14 @@ awk -F"|" '
                 punto4[$2]++;
             }
         }
-    }bandera=0;
+    }
+    else
+    {
+        if($0!=""){
+            bandera=0;
+        }
+    }
+
 }
 END{
     printf "\"Materia\",\"Final\",\"Recursan\",\"Recuperan\",\"Abandonaron\"\n" > "resultados.txt"
