@@ -72,10 +72,10 @@ then
 fi
 
 IFS=$'\n'
-
+bandera=1;
 awk -F"|" '
 {
-    if($0!=""){
+    if($0!="" && bandera!=1){
         clave=$1"_"$2
         materias[$2]=$2
         if(!(clave in alu_materia)){
@@ -97,7 +97,7 @@ awk -F"|" '
                 punto4[$2]++;
             }
         }
-    }
+    }bandera=0;
 }
 END{
     printf "\"Materia\",\"Final\",\"Recursan\",\"Recuperan\",\"Abandonaron\"\n" > "resultados.txt"
