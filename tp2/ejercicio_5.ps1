@@ -71,7 +71,12 @@ foreach($item in $archivo){
 
         }
     }
-    $bandera=1
+    else{
+        if(!$item.Equals("")){
+            $bandera=1
+        }
+    }
+ 
 
 }
 
@@ -84,3 +89,16 @@ foreach($elem in $materias.GetEnumerator()){
     write-output $punto4[$value] 
 
 }
+
+
+<#
+.Synopsis
+    Este script recibe un archivo de notas de alumnos y lo analiza para indicar por cada materia, cuantos alumnos recursan,cuantos pueden recuperar, cuantos tienen que ir a final y cuantos abandonaron.
+.Description
+    El script ejercicio_5.ps1 recibe como parámetros el archivo de alumnos para analizar, la primera linea del archivo no se toma encuenta porque se supone que son los titulos de cada columna.
+.Example
+    ./ejercicio_5.ps1 -file alumnos
+.Notes
+    Parámetros:
+    -file: archivo que se va a usar para sacar las estadisticas por materia.
+#>
