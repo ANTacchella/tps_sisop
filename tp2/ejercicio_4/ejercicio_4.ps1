@@ -37,11 +37,11 @@ if( $existe2 -ne $True ){
     exit 1
 }
 
-if( !$empresa ){
+if( !$Empresa ){
     $regex_log='[a-zA-Z]+\-[0-9]+\.log$'
 }
 else{
-    $regex_log="$empresa\-[0-9]+\.log$"
+    $regex_log="$Empresa\-[0-9]+\.log$"
 }
 
 $arch_validos = Get-ChildItem $Directorio | Where-Object Name -Match $regex_log | Select-Object -ExpandProperty "Name"
