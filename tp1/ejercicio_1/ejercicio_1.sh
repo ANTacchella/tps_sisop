@@ -10,7 +10,7 @@
 ErrorS()  {  
  
 	echo "Error. La sintaxis del script es la siguiente:"    
-	echo "El comando para saber la cantidad de líneas del archivo es: $0 nombre_archivo L."    
+	echo "El comando para saber la cantidad de nuevas líneas del archivo es: $0 nombre_archivo L."    
 	echo "El comando para saber el número de caracteres del archivo es: $0 nombre_archivo C." 
 	echo "El comando para saber la longitud de la línea más larga del archivo es: $0 nombre_archivo M." 
 
@@ -29,7 +29,7 @@ elif test -f $1 && (test $2 = "L" || test $2 = "C" || test $2 = "M"); then
 	if test $2 = "L"; then       
         read res <<< $(wc -l $1) 
         ser=${res% *}    
-        echo "La cantidad de líneas del archivo es: $ser." 
+        echo "La cantidad de nuevas líneas del archivo es: $ser." 
 	elif test $2 = "C"; then       
         read res <<< $(wc -m $1)     
         ser=${res% *} 
@@ -46,13 +46,13 @@ fi
 #RESPUESTAS:  
 
 #a)	¿Cuál es el objetivo de este script?  
-#El objetivo del script es mostrar por pantalla el número de líneas, el número de caracteres o el número de caracteres de la línea más larga del archivo que se le mande (si se tiene permiso de lectura, sino devuelve el error correspondiente), dependiendo del segundo parámetro ingresado.
+#El objetivo del script es mostrar por pantalla el número de nuevas líneas, el número de caracteres o el número de caracteres de la línea más larga del archivo que se le mande (si se tiene permiso de lectura, sino devuelve el error correspondiente), dependiendo del segundo parámetro ingresado.
 
 #b)	¿Qué parámetros recibe?  
 #Recibe dos parámetros:
 #-El primero es el archivo sobre el que se quiere consultar.
 #-El segundo parámetro indica que es lo que se quiere consultar del archivo:
-#	L = número de líneas.
+#	L = número de nuevas líneas.
 #	C = número de caracteres.
 #	M = número de caracteres de la línea más larga.
 
