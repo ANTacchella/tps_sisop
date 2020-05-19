@@ -73,9 +73,9 @@ fi
 
 IFS=$'\n'
 
-awk -F"|" '
-{
-    if($0!=""){
+awk -F"|" 'BEGIN{bandera=1}
+{   
+    if($0!="" && bandera!=1){
         clave=$1"_"$2
         materias[$2]=$2
         if(!(clave in alu_materia)){
@@ -98,6 +98,13 @@ awk -F"|" '
             }
         }
     }
+    else
+    {
+        if($0!=""){
+            bandera=0;
+        }
+    }
+
 }
 END{
     printf "\"Materia\",\"Final\",\"Recursan\",\"Recuperan\",\"Abandonaron\"\n" > "resultados.txt"

@@ -1,3 +1,4 @@
+DNI|IdMateria|PrimerParcial|SegundoParcial|RecuParcial|RecuNota|Final
 1|2|||||| sin primer parcial y sin segundo parcial
 2|6|3||||| primer parcial 3 y sin segundo parcial
 3|3||3|||| sin primer parcial y segundo parcial 3

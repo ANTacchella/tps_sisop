@@ -1,3 +1,4 @@
+DNI|IdMateria|PrimerParcial|SegundoParcial|RecuParcial|RecuNota|Final
 1|4|8|4|||
 3|4|5|6|||
 4|8|4|7|1|6|3

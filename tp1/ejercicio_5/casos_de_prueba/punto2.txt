@@ -1,3 +1,4 @@
+DNI|IdMateria|PrimerParcial|SegundoParcial|RecuParcial|RecuNota|Final
 1|12|||||1|  final menor que 4
 2|12|1|||||  primer parcial menor que 4 sin rendir recu
 3|12|1||1|1|| primer parcial menor que 4 rindiendo recu y sacando menos de 4
