@@ -72,9 +72,11 @@ then
 fi
 
 IFS=$'\n'
-bandera=1;
+
 awk -F"|" '
-{
+{   BEGIN{
+        bandera=1;
+          }
     if($0!="" && bandera!=1){
         clave=$1"_"$2
         materias[$2]=$2
