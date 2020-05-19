@@ -107,8 +107,6 @@ then
     exit 1;
 fi
 
-cd $SRC_PATH 2> /dev/null || ErrorL
-
 # Expresión regular para filtrar solo los archivos de log según el formato 'empresa-int.log'
 # Si se me pasara por parámetro la empresa la expresión regular limitará solo a los archivos de esa empresa
 if [ -z "$EMPRESA" ]
@@ -118,27 +116,33 @@ else
     regex_log="$EMPRESA\-[0-9]+\.log$"
 fi
 
-declare -a empresas
+SRC_PATH=`echo "$SRC_PATH" | sed 's/\/*$//'`
+DEST_PATH=`echo "$DEST_PATH" | sed 's/\/*$//'`
 
-# Guardo en este array el nombre de la compañía de cada archivo válido
-empresas=$(ls | grep -E $regex_log | cut -f 1 -d "-")
+declare -A empresas
+
+# Guardo en este array el nombre de la compañía de cada archivo válido y los archivos de esa empresa
+for emp in $(ls "$SRC_PATH/" | grep -E $regex_log | cut -f 1 -d "-")
+do
+    empresas[$emp]=$(ls -d "$SRC_PATH/"* | grep -E "$emp\-[0-9]+\.log$")
+done
 
 # Recorro las empresas
-for emp in ${empresas[*]}
+for emp in ${!empresas[*]}
 do  
     # Si no tengo un .tar.gz para la empresa dada en el directorio de destino creo uno nuevo
-    if [ ! -f "$DEST_PATH$emp.tar.gz" ]
+    if [ ! -f "$DEST_PATH/$emp.tar.gz" ]
     then
-        ls | grep -E "$emp\-[0-9]+\.log$" | xargs tar -czf "$DEST_PATH$emp.tar.gz"
+        tar -czf "$DEST_PATH/$emp.tar.gz" ${empresas[$emp]}
     # Si tengo un .tar.gz para la empresa dada en el directorio de destino añado los archivos a ese .tar.gz
     else
-        gunzip "$DEST_PATH$emp.tar.gz"
-        ls | grep -E "$emp\-[0-9]+\.log$" | xargs tar -rf "$DEST_PATH$emp.tar"
-        gzip "$DEST_PATH$emp.tar"
+        gunzip "$DEST_PATH/$emp.tar.gz"
+        tar -rf "$DEST_PATH/$emp.tar" ${empresas[$emp]}
+        gzip "$DEST_PATH/$emp.tar"
     fi
     # Hago un rm de los archivos del directorio de origen solo si fue exitosa la compresión de los archivos
     if [ $? == 0 ]
     then
-        ls | grep -E "$emp\-[0-9]+\.log$" | xargs rm
+        ls -d "$SRC_PATH/"* | grep -E "$emp\-[0-9]+\.log$" | xargs rm
     fi
 done
