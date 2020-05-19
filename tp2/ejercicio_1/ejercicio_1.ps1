@@ -1,3 +1,4 @@
+#!/usr/bin/pwsh
 Param(
     [Parameter(Position = 1, Mandatory = $false)]
     [String] $pathSalida = ".\procesos.txt ",
@@ -22,7 +23,7 @@ Respuestas:
 1) El objetivo de este script es guardar en un archivo el nombre y 
 id de todos los procesos que se están ejecutando en el sistema, e
 imprimir en pantalla los N primeros procesos.
-2) Le agregaría la posición 2 al parámetro cantidad.
+2) Le agregaría la posición 2 al parámetro cantidad. Y que cantidad sea mayor a cero.
 3) Si el script es ejecutado sin enviar ningún parámetro este se
 ejecuta usando los valores predeterminados dentro del mismo, siendo
 estos pathSalida = ".\procesos.txt" y cantidad = 3.
