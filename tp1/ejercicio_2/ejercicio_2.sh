@@ -210,10 +210,10 @@ END{
     for( usr in cantUserHoy )
     {
         usrPromedio=tiempoPorUsuario[usr]/cantUserHoy[usr]
-        printf "%10s |%40s |%13d |%4d:%02d:%02d \n",dia,usr,cantUserHoy[usr],(usrPromedio/60)/60,(usrPromedio/60)%60,usrPromedio%60 >> ".Punto_2.txt"
+        printf "%10s |%20s |%13d |%4d:%02d:%02d \n",dia,usr,cantUserHoy[usr],(usrPromedio/60)/60,(usrPromedio/60)%60,usrPromedio%60 >> ".Punto_2.txt"
     
         #Punto 3
-        printf "%40s |%13d \n",usr,cantUserHoy[usr] >> ".Punto_3.txt"
+        printf "%20s |%13d \n",usr,cantUserHoy[usr] >> ".Punto_3.txt"
     }
 
     #Punto 4    
@@ -235,13 +235,13 @@ chmod 777 .Punto_1.txt
 archivosCreados[".Punto_1.txt"]=".Punto_1.txt"
 #-----------------PUNTO-1--------------------"
 printf "\nPROMEDIO DEL TIEMPO DE LLAMADA POR DIA"
-cat .Punto_1.txt | awk 'BEGIN{printf "\n%4s |%10s |%s \n","LINE","DIA","TIEMPO DE LLAMADA PROMEDIO ";}{printf "%4d |%s \n",NR,$0}'
+cat .Punto_1.txt | awk 'BEGIN{printf "\n%10s |%s \n","DIA","TIEMPO DE LLAMADA PROMEDIO ";}{printf "%s \n",$0}'
 
 chmod 777 .Punto_2.txt
 archivosCreados[".Punto_2.txt"]=".Punto_2.txt"
 #-----------------PUNTO-2--------------------"
 printf "\nPROMEDIO DE TIEMPO Y CANTIDAD DE LLAMADAS POR DIA POR USUARIO"
-cat .Punto_2.txt | awk 'BEGIN{printf "\n%4s |%10s |%40s |%13s |%10s\n","LINE","DIA","USUARIO","CANT.LLAMADAS","TIEMPO";}{printf "%4d |%s \n",NR,$0}'
+cat .Punto_2.txt | awk 'BEGIN{printf "\n%10s |%20s |%13s |%10s\n","DIA","USUARIO","CANT.LLAMADAS","TIEMPO";}{printf "%s \n",$0}'
 
 chmod 777 .Punto_3.txt
 archivosCreados[".Punto_3.txt"]=".Punto_3.txt"
@@ -251,7 +251,7 @@ printf "\nUSUARIOS CON MAS CANTIDAD DE LLAMADAS EN LA SEMANA"
 cat .Punto_3.txt | awk -F"|" '
 BEGIN{
     cont=0;
-    printf "\n%4s |%41s |%13s \n","LINE","USUARIO","CANT.LLAMADAS";
+    printf "\n%6s |%20s |%13s \n","PUESTO","USUARIO","CANT.LLAMADAS";
 }
 {
     if( $1 in cantCallsSem)
@@ -264,7 +264,7 @@ END{
     PROCINFO["sorted_in"] = "@val_num_desc"
     for(name in cantCallsSem){
         if( cont<=3 ){
-            printf "%4s |%40s |%13s \n",cont,name,cantCallsSem[name];  
+            printf "%6s |%20s|%13s \n",cont,name,cantCallsSem[name];  
             cont++;
         }
     }           
@@ -274,7 +274,7 @@ chmod 777 .Punto_4.txt
 archivosCreados[".Punto_4.txt"]=".Punto_4.txt"
 #-----------------PUNTO-4--------------------"
 printf "\nCANTIDAD DE LLAMADAS POR DEBAJO DE LA MEDIA"; 
-cat .Punto_4.txt | awk -F"|" 'BEGIN{printf "\n%4s |%11s |%13s\n","LINE","DIA","CANT.LLAMADAS";}{printf "%4d |%11s |%13s \n",NR,$1,$2}'
+cat .Punto_4.txt | awk -F"|" 'BEGIN{printf "\n%11s |%13s\n","DIA","CANT.LLAMADAS";}{printf "%11s |%13s \n",$1,$2}'
 
 chmod 777 .Punto_4b.txt
 archivosCreados[".Punto_4b.txt"]=".Punto_4b.txt"
@@ -303,13 +303,13 @@ END{
         }
     }
     printf "\nUSUARIO CON MAS LLAMADAS POR ABAJO DE LA MEDIA EN LA SEMANA"; 
-    printf "\n%4s |%30s |%13s \n","LINE","USUARIO","CANT.LLAMADAS";
+    printf "\n%6s |%20s |%13s \n","PUESTO","USUARIO","CANT.LLAMADAS";
 
     cont=1;
     PROCINFO["sorted_in"] = "@val_num_desc"
     for(name in cantCallUser){
         if( cont==1 ){
-            printf "%4d |%30s |%13s \n",cont,name,cantCallUser[name];  
+            printf "%6d |%20s |%13s \n",cont,name,cantCallUser[name];  
             cont++;
         }
     }
