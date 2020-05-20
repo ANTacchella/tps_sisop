@@ -11,7 +11,7 @@ Param(
  
     [Parameter(Position = 1, mandatory = $True)]
     [ValidateNotNullOrEmpty()]
-    [string] $file
+    [string] $Nomina
 
 )
 
@@ -26,7 +26,7 @@ function Error_1(){
 
 }
 
-$archivo = get-content $file 
+$archivo = Import-Csv -Path $Nomina -Delimiter '|'
 $punto1 = @{}
 $punto2 = @{}
 $punto3 = @{}
@@ -39,33 +39,41 @@ $bandera=0
 foreach($item in $archivo){
 
     if(!$item.Equals("") -and $bandera -ne "1" ){
+        
+        $dni = $item.DNI
+        $idMateria = $item.IdMateria
 
-        $linea = $item.Split("|")
-        $clave= $linea[0]+"_"+$linea[1]
-        $materias[$linea[1]] = $linea[1]      
+        $clave= $dni+"_"+$idMateria
+        $materias[$idMateria] = $idMateria      
     
         if($clave -notin $alu_materia){
 
             $alu_materia[$clave] = $clave
             
+            $p1 = $item.PrimerParcial
+            $p2 = $item.SegundoParcial
+            $recu = $item.RecuParcial
+            $nRecu = $item.RecuNota
+            $final = $item.Final
+
             #punto 1
-            if( ((4 -le $linea[2] -and $linea[2] -le 6 -and $linea[4] -ne "1" ) -or ($linea[4] -eq "1" -and 4 -le $linea[5] -and $linea[5] -le 6) -or ($linea[4] -eq "1" -and 6 -lt $linea[5] -and  4 -le $linea[3] -and $linea[3] -le 6)) -and (( 4 -le $linea[3] -and $linea[3] -le  6 -and $linea[4] -ne "2") -or ($linea[4] -eq "2" -and 4 -le $linea[5] -and $linea[5] -le 6) -or ($linea[4] -eq "2" -and 6 -lt $linea[5] -and 4 -le $linea[2] -and $linea[2] -le 6)) -and $linea[6] -eq ""  ){
-                $punto1[$linea[1]]+=1
+            if( ((4 -le $p1 -and $p1 -le 6 -and $recu -ne "1" ) -or ($recu -eq "1" -and 4 -le $nRecu -and $nRecu -le 6) -or ($recu -eq "1" -and 6 -lt $nRecu -and  4 -le $p2 -and $p2 -le 6)) -and (( 4 -le $p2 -and $p2 -le  6 -and $recu -ne "2") -or ($recu -eq "2" -and 4 -le $nRecu -and $nRecu -le 6) -or ($recu -eq "2" -and 6 -lt $nRecu -and 4 -le $p1 -and $p1 -le 6)) -and $final -eq ""  ){
+                $punto1[$idMateria]+=1
                
             }
             #punto 2
-            if( ($linea[6]  -lt 4 -and  $linea[6]  -ne  "") -or (($linea[2]  -lt  4 -and $linea[4]  -ne  "1" ) -or ($linea[4] -eq "1" -and $linea[5]  -lt  4 )) -or (($linea[3]  -lt  4 -and $linea[4]  -ne  "2" ) -or ($linea[4] -eq "2" -and $linea[5]  -lt  4 )) ){
-                $punto2[$linea[1]]+=1
+            if( ($final  -lt 4 -and  $final  -ne  "") -or (($p1  -lt  4 -and $recu  -ne  "1" ) -or ($recu -eq "1" -and $nRecu  -lt  4 )) -or (($p2  -lt  4 -and $recu  -ne  "2" ) -or ($recu -eq "2" -and $nRecu  -lt  4 )) ){
+                $punto2[$idMateria]+=1
                
             }
             #punto 3
-            if($linea[5] -eq "" -and ( ($linea[2] -lt 7 -and $linea[2] -ne "" ) -or ($linea[3] -lt 7 -and $linea[3] -ne "") ) ){
-                $punto3[$linea[1]]+=1
+            if($nRecu -eq "" -and ( ($p1 -lt 7 -and $p1 -ne "" ) -or ($p2 -lt 7 -and $p2 -ne "") ) ){
+                $punto3[$idMateria]+=1
        
             }
             #punto 4
-            if( ($linea[2] -eq "" -and $linea[4] -eq "1" -and $linea[5] -eq "") -or ($linea[2] -eq "" -and $linea[4] -ne "1") -or ($linea[3] -eq "" -and $linea[4] -eq "2" -and $linea[5] -eq "") -or ($linea[3] -eq "" -and $linea[4] -ne 2) ){
-                $punto4[$linea[1]]+=1
+            if( ($p1 -eq "" -and $recu -eq "1" -and $nRecu -eq "") -or ($p1 -eq "" -and $recu -ne "1") -or ($p2 -eq "" -and $recu -eq "2" -and $nRecu -eq "") -or ($p2 -eq "" -and $recu -ne 2) ){
+                $punto4[$idMateria]+=1
                
             }
 
@@ -97,8 +105,8 @@ foreach($elem in $materias.GetEnumerator()){
 .Description
     El script ejercicio_5.ps1 recibe como parámetros el archivo de alumnos para analizar, la primera linea del archivo no se toma encuenta porque se supone que son los titulos de cada columna.
 .Example
-    ./ejercicio_5.ps1 -file alumnos
+    ./ejercicio_5.ps1 -Nomina ./alumnos.csv o ./alumnos.txt
 .Notes
     Parámetros:
-    -file: archivo que se va a usar para sacar las estadisticas por materia.
+    -Nomina: archivo que se va a usar para sacar las estadisticas por materia.
 #>
