@@ -15,6 +15,13 @@ Param(
 
 )
 
+# Fijarse de evaluar permisos
+$existe = Test-Path -Path $Nomina -PathType Leaf
+
+if( $existe -ne $True ){
+    Write-Error "¡El archivo proporcionado no existe!"
+    exit 1
+}
 
 [string] $info = "para mas informacion ejecute $0 -h"
 #buscar como seria el $0 de bash en powershell
