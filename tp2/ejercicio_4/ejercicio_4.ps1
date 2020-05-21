@@ -10,7 +10,6 @@ Param(
     #Validacion de Parametros: Directorio y DirectorioZip tienen que ser enviados obligatoriamente y no ser vacios.
     #Empresa en cambio puede no estar o ser vacia. Si es vacia se toma como que no estuviese.
 
-    # TODO: tratamiento de errores que marca en la consigna
     [Parameter( mandatory = $True)]
     [ValidateNotNullOrEmpty()]
     [string] $Directorio,
@@ -24,7 +23,7 @@ Param(
     [string] $Empresa
 
 )
-# TODO: evaluar permisos
+
 $existe1 = Test-Path -Path $Directorio -PathType container
 $existe2 = Test-Path -Path $DirectorioZip -PathType container
 

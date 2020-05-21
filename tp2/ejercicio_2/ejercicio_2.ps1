@@ -14,7 +14,6 @@ Param(
 
 )
 
-# Fijarse de evaluar permisos
 $existe = Test-Path -Path $Path -PathType Leaf
 
 if( $existe -ne $True ){
@@ -38,7 +37,7 @@ $duracionLlamadasSemana = 0
 
 $file_data | ForEach-Object {
     if ( $vecLlamada.Contains($_.Usuario) ){
-        $diaInicial = $vecLlamada[$_.Usuario].Split(" ")[0].Split("-")[2]
+        $diaInicial = $vecLlamada[$_.Usuario].Split(" ")[0]
         $vecLlamada[$_.Usuario] = New-TimeSpan -Start $vecLlamada[$_.Usuario] -End $_.FechaHora 
         
         #Punto 1
@@ -46,14 +45,14 @@ $file_data | ForEach-Object {
         $cantLlamadas[$diaInicial]++
         
         #Punto 2
-        $tiempoUsuarioDia["$($_.Usuario)-$diaInicial"] = $tiempoUsuarioDia["$($_.Usuario)-$diaInicial"] + $vecLlamada[$_.Usuario]
-        $cantUsuarioDia["$($_.Usuario)-$diaInicial"]++
+        $tiempoUsuarioDia["$($_.Usuario)/$diaInicial"] = $tiempoUsuarioDia["$($_.Usuario)/$diaInicial"] + $vecLlamada[$_.Usuario]
+        $cantUsuarioDia["$($_.Usuario)/$diaInicial"]++
 
         #Punto 3
         $cantLlamadasUsuario[$_.Usuario]++
 
         #Punto 4 - Parte 1
-        $key = "$($_.Usuario)-$($cantLlamadasUsuario[$_.Usuario])-$diaInicial"
+        $key = "$($_.Usuario)/$($cantLlamadasUsuario[$_.Usuario])/$diaInicial"
         $duracionLlamada[$key] = $vecLlamada[$_.Usuario]
 
         #Punto 4 - Parte 2
@@ -69,68 +68,88 @@ $file_data | ForEach-Object {
 
 }
 
- #Punto 1
- Write-Output "`nPUNTO 1:"
- Write-Output "`Promedio de tiempo de las llamadas realizadas por día`n" 
- foreach ($dia in $totalTiempo.keys.GetEnumerator() | Sort-Object ){
-     $prom = $totalTiempo[$dia]/$cantLlamadas[$dia]
-     $prom = '{0:hh\:mm\:ss}' -f $prom
-    "`t$($dia): `t$($prom)"| Format-List  
-    #Write-Output "`tPromedio de tiempo del dia $dia son: $($totalTiempo[$dia]/$cantLlamadas[$dia])"
- }
-
- #Punto 2
- Write-Output "`nPUNTO 2:"
- Write-Output "Promedio de tiempo y cantidad por usuario por día`n" 
- foreach ($usuarioDia in $tiempoUsuarioDia.keys.GetEnumerator() | Sort-Object){
-    $usuarioDia_list = $usuarioDia.Split("-")
-    "`tUsuario: $($usuarioDia_list[0]) Dia: $($usuarioDia_list[1]) Llamadas: $($cantUsuarioDia[$usuarioDia]) Promedio de Tiempo: $($tiempoUsuarioDia[$usuarioDia]/$cantUsuarioDia[$usuarioDia])" | Format-List -GroupBy $usuarioDia_list[0]
-  # Write-Output "`tLa cantidad de llamadas del dia $($usuarioDia_list[1]) del usuario $($usuarioDia_list[0]) son: $($cantUsuarioDia[$usuarioDia])"
-   # Write-Output "`tY su promedio de tiempo es $($tiempoUsuarioDia[$usuarioDia]/$cantUsuarioDia[$usuarioDia])`n"
+#Punto 1
+$prom = @()
+Write-Output "PUNTO 1:"
+Write-Output "`nPromedio de tiempo de las llamadas realizadas por día" 
+foreach ($dia in $totalTiempo.keys.GetEnumerator() | Sort-Object ){
+    $prom_value = '{0:hh\:mm\:ss}' -f $($totalTiempo[$dia]/$cantLlamadas[$dia])
+    $item = New-Object System.Object
+    $item | Add-Member -MemberType NoteProperty -Name "Día" -Value $dia
+    $item | Add-Member -MemberType NoteProperty -Name "Promedio" -Value $prom_value
+    $prom += $item
 }
+$prom | Format-List -Expand EnumOnly
+
+#Punto 2
+Write-Output "PUNTO 2:"
+Write-Output "`nPromedio de tiempo y cantidad de llamadas por usuario y día" 
+$usuarios_dia = @()
+foreach ($usuarioDia in $tiempoUsuarioDia.keys.GetEnumerator() | Sort-Object){
+    $usuarioDia_list = $usuarioDia.Split("/")
+    $item = New-Object System.Object
+    $item | Add-Member -MemberType NoteProperty -Name "Usuario" -Value $usuarioDia_list[0]
+    $item | Add-Member -MemberType NoteProperty -Name "Día" -Value $usuarioDia_list[1]
+    $item | Add-Member -MemberType NoteProperty -Name "Cant. llamadas" -Value $cantUsuarioDia[$usuarioDia]
+    $item | Add-Member -MemberType NoteProperty -Name "Promedio" -Value $($tiempoUsuarioDia[$usuarioDia]/$cantUsuarioDia[$usuarioDia])
+    $usuarios_dia += $item
+}
+$usuarios_dia | Format-List -Expand EnumOnly
 
 #Punto 3
 $flag = 0
-Write-Output "`nPUNTO 3:"
-Write-Output "Los tres usuarios con más llamadas son:`n"
-foreach ($item in $cantLlamadasUsuario.GetEnumerator() | Sort-Object -Property value -Descending){
-    if ( $flag -lt 3 ){
-        $flag++
-        Write-Output "`t$($flag)-El usuario $($item.name) con $($item.value)"
-    }
-    else{
-        break
-    }
+$usuarios = @()
+Write-Output "PUNTO 3:"
+Write-Output "`nLos tres usuarios con más llamadas son:"
+$cantLlamadasUsuario = $cantLlamadasUsuario.GetEnumerator() | Sort-Object -Property value -Descending -Top 3
+foreach ($usr in $cantLlamadasUsuario){
+    $flag++
+    $item = New-Object System.Object
+    $item | Add-Member -MemberType NoteProperty -Name "Puesto" -Value $flag
+    $item | Add-Member -MemberType NoteProperty -Name "Usuario" -Value $usr.name
+    $item | Add-Member -MemberType NoteProperty -Name "Cant. llamadas" -Value $usr.value
+    $usuarios += $item
 }
+$usuarios | Format-List -Expand EnumOnly
 
 #Punto 4 - Parte 1
-Write-Output "`nPUNTO 4:"
-Write-Output "Cantidad de llamadas por debajo de la media diaria:`n"
+Write-Output "PUNTO 4:"
+Write-Output "`nCantidad de llamadas por debajo de la media diaria:"
+$llamadas_bajo_media = @()
 $callsBelowMedia = @{}
 foreach ($dia in $totalTiempo.keys){
     $promedioDia = $totalTiempo[$dia]/$cantLlamadas[$dia]
     foreach ($key in $duracionLlamada.keys){
-        $diaLlamada = $key.Split("-")[2]
+        $diaLlamada = $key.Split("/")[2]
         if ( $diaLlamada -eq $dia ){
             if( $duracionLlamada[$key] -lt $promedioDia ){
                 $callsBelowMedia[$dia]++
             }
         }
     }
-    Write-Output "`tPara el dia $dia fueron $($callsBelowMedia[$dia]) llamadas por debajo del promedio del día."
+    $item = New-Object System.Object
+    $item | Add-Member -MemberType NoteProperty -Name "Día" -Value $dia
+    $item | Add-Member -MemberType NoteProperty -Name "Promedio" -Value $('{0:hh\:mm\:ss}' -f $promedioDia)
+    $item | Add-Member -MemberType NoteProperty -Name "Llamadas debajo de la media" -Value $callsBelowMedia[$dia]
+    $llamadas_bajo_media += $item
 }
+$llamadas_bajo_media | Format-List -Expand EnumOnly
 
 #Punto 4 - Parte 2
 $callsBelowMediaUser = @{}
 $promedioSem = $duracionLlamadasSemana/$cantLlamadasSemana
 foreach ($key in $duracionLlamada.keys){
-    $user = $key.Split("-")[0]
+    $user = $key.Split("/")[0]
     if( $duracionLlamada[$key] -lt $promedioSem ){
         $callsBelowMediaUser[$user]++
     }
 }
+Write-Output "El usuario con más llamadas con duración por debajo de la media semanal es:"
 $user = $callsBelowMediaUser.GetEnumerator() | Sort-Object -Property value -Descending -Top 1
-Write-Output "`nEl usuario con más llamadas con duración por debajo de la media semanal es: $($user.name) con $($user.value)`n`n"
+$item = New-Object System.Object
+$item | Add-Member -MemberType NoteProperty -Name "Usuario" -Value $user.name.Split("/")[0]
+$item | Add-Member -MemberType NoteProperty -Name "Cant. llamadas" -Value $user.value
+$item | Format-List
 
 <#
 .Synopsis
