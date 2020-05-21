@@ -1,3 +1,5 @@
+#!/usr/bin/pwsh
+
 # ejercicio_5.ps1 | Trabajo Práctico 2) Ejercicio 5) | Primera entrega
 # Maximiliano José Bernardo | 41912800
 # Nicolás Agustín Fábregues | 41893896
