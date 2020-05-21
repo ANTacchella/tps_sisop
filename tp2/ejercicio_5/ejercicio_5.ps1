@@ -23,16 +23,6 @@ if( $existe -ne $True ){
     exit 1
 }
 
-[string] $info = "para mas informacion ejecute $0 -h"
-#buscar como seria el $0 de bash en powershell
-
-function Error_1(){
-
- write-ouput "la ruta especificada no existe o no se tiene los permisos requeridos, $info " 
- exit 1
-
-}
-
 $archivo = Import-Csv -Path $Nomina -Delimiter '|'
 $punto1 = @{}
 $punto2 = @{}
