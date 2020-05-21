@@ -1,3 +1,5 @@
+#!/usr/bin/pwsh
+
 # ejercicio_3.ps1 | Trabajo Práctico 2) Ejercicio 3) | Primera entrega
 # Maximiliano José Bernardo | 41912800
 # Nicolás Agustín Fábregues | 41893896
@@ -88,6 +90,9 @@ finally{ #Se ejecuta cuando apretas ctrl+c
     Registra el directorio proporcionado como parámetro y elimina todos los archivos de log antiguos cada vez que se crea uno nuevo.
 .Description
     El script ejercicio_3.ps1 se encarga de encarga de establecer un manejador de eventos en el directorio pasado como parámetro para que cada vez que se dispara el evento "Created" al crear un archivo nuevo se analice el directorio y se elimine los archivos de log antiguos y dejando únicamente el log más reciente de cada empresa.
+.Example
+    Ejecución del script:
+    ./ejercicio_3.ps1 -Directorio logs
 .Notes
     Parámetros:
     -Directorio: Directorio en el que se encuentran los archivos de log. Puede ser una ruta relativa o absoluta.

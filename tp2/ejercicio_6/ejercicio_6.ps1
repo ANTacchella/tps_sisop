@@ -1,3 +1,5 @@
+#!/usr/bin/pwsh
+
 # ejercicio_6.ps1 | Trabajo Práctico 2) Ejercicio 6) | Primera entrega
 # Maximiliano José Bernardo | 41912800
 # Nicolás Agustín Fábregues | 41893896
@@ -47,7 +49,7 @@ if($contenido -Match "[a-zA-Z]"){
     exit 1
 }
 #Caso de archivo vacío, retorno Cero
-elseif($contenido -eq $null){
+elseif($null -eq $contenido){
     Write-Host "0"
     "0" 1> salida.out
     exit 1
