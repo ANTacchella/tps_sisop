@@ -88,6 +88,9 @@ foreach($item in $archivo){
 
 }
 
+
+$salida = @()
+
 foreach($elem in $materias.GetEnumerator()){
     $value = $elem.Value
     write-output "materia $value"
@@ -96,8 +99,17 @@ foreach($elem in $materias.GetEnumerator()){
     write-output $punto3[$value] 
     write-output $punto4[$value] 
 
+    $linea += @{
+        Materia = $value
+        Final = $punto1[$value] 
+        Recursan = $punto2[$value]
+        Recuperan = $punto3[$value]
+        Abandonaron = $punto4[$value]   
+    }
+    $salida += New-Object PSObject -Property $linea  
 }
 
+$salida | export-csv -Path .\res_materias.txt -NoTypeInformation
 
 <#
 .Synopsis
