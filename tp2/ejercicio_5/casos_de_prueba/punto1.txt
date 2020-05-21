@@ -1,3 +1,4 @@
+DNI|IdMateria|PrimerParcial|SegundoParcial|RecuParcial|RecuNota|Final
 1|12|5|5||||  primer y segundo parcial entre 4 y 6, sin rendir final
 2|12|||||5| con finall->false
 3|12|5|5|1|5|| sin final,primer parcial 5 ,segundo parcial5,recupero primer parcial 5

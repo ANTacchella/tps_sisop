@@ -44,7 +44,13 @@ foreach($item in $archivo){
         $idMateria = $item.IdMateria
 
         $clave= $dni+"_"+$idMateria
-        $materias[$idMateria] = $idMateria      
+        if($idMateria -notin $materias){
+            $materias[$idMateria] = $idMateria 
+            $punto1[$idMateria] = 0
+            $punto2[$idMateria] = 0
+            $punto3[$idMateria] = 0
+            $punto4[$idMateria] = 0
+        }     
     
         if($clave -notin $alu_materia){
 
@@ -93,20 +99,14 @@ $salida = @()
 
 foreach($elem in $materias.GetEnumerator()){
     $value = $elem.Value
-    write-output "materia $value"
-    write-output $punto1[$value] 
-    write-output $punto2[$value] 
-    write-output $punto3[$value] 
-    write-output $punto4[$value] 
-
-    $linea += @{
+    
+    $salida += New-Object PSObject -Property @{
         Materia = $value
         Final = $punto1[$value] 
         Recursan = $punto2[$value]
         Recuperan = $punto3[$value]
         Abandonaron = $punto4[$value]   
     }
-    $salida += New-Object PSObject -Property $linea  
 }
 
 $salida | export-csv -Path .\res_materias.txt -NoTypeInformation

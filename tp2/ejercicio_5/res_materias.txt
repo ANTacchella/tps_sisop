@@ -1,0 +1,4 @@
+"Recursan","Recuperan","Abandonaron","Materia","Final"
+"1","0","0","15","0"
+"1","1","0","4","0"
+"0","0","0","8","1"
