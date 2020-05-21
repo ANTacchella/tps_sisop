@@ -11,7 +11,6 @@ Param(
  
     [Parameter(Position = 1, mandatory = $True)]
     [ValidateNotNullOrEmpty()]
-    [ValidatePattern('[*.txt | *.csv]')]
     [string] $Nomina
 
 )
