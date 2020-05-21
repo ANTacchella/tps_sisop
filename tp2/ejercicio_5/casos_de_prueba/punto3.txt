@@ -1,0 +1,7 @@
+DNI|IdMateria|PrimerParcial|SegundoParcial|RecuParcial|RecuNota|Final
+1|0|7|7|1|5|| primer ysegundo parcial 7 , recuperatorio 5->false
+2|0|5|7|1|5|| primer parcial 5 y segundo parcial 7 , recuperatorio 5->false
+3|0|7|5|1|5|| primer parcial 7 ysegundo parcial 5 , recuperatorio 5->false
+4|0|5|7|||| primer parcial 5 y segundo parcial 7 sin recuperatorio
+5|0|7|5|||| primer parcial 7 y segundo parcial 5 sin recuperatorio
+6|0|5|5|||| primer parcial 5 y segundo parcial 5 sin recuperatorio
