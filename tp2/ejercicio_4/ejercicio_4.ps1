@@ -47,20 +47,25 @@ $arch_validos = Get-ChildItem $Directorio | Where-Object Name -Match $regex_log 
 
 $empresas = @{}
 foreach ($item in $arch_validos) {
-    if ( ! $empresas.Contains( $item.Split('-')[0] )) {
-        $empresas.Add( $item.Split('-')[0], "" )
+    $nombre_emp = $item.Split('-')[0]
+    $num_emp = [int]$item.Split('-')[1].Split('.')[0]
+    if ( ! $empresas.Contains( $nombre_emp )) {
+        $empresas.Add( $nombre_emp, $num_emp)
     } 
+    if ( $num_emp -gt $empresas[$nombre_emp] )
+    {
+        $empresas[$nombre_emp] = $num_emp
+    }
 }
 
 # Recorro las empresas
 foreach ($emp in $empresas.keys)
 {
     #Comprimo los archivos, agrego la opcion -Update para que si llega a existir ya el archivo.zip, no lo borre sino que lo actualize
-    Get-ChildItem $Directorio | Where-Object Name -Match "$emp\-[0-9]+\.log$" | Compress-Archive -Update -DestinationPath "$DirectorioZip/$emp.zip"
-    
+    Get-ChildItem $Directorio | Where-Object {($_.Name -notlike "$emp-$($empresas[$emp]).log" -and $_.Name -Match "$emp\-[0-9]+\.log$") } | Compress-Archive -Update -DestinationPath "$DirectorioZip/$emp.zip"
     # Hago un rm de los archivos del directorio de origen solo si fue exitosa la compresión de los archivos
     if( $? ) {
-        Get-ChildItem $Directorio | Where-Object Name -Match "$emp\-[0-9]+\.log$" | Remove-Item 
+        Get-ChildItem $Directorio | Where-Object {($_.Name -notlike "$emp-$($empresas[$emp]).log" -and $_.Name -Match "$emp\-[0-9]+\.log$") } | Remove-Item 
     }
 }
 
