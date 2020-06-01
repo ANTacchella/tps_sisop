@@ -137,7 +137,12 @@ $llamadas_bajo_media | Format-List -Expand EnumOnly
 
 #Punto 4 - Parte 2
 $callsBelowMediaUser = @{}
-$promedioSem = $duracionLlamadasSemana/$cantLlamadasSemana
+if ($cantLlamadasSemana -ne 0){
+    $promedioSem = $duracionLlamadasSemana/$cantLlamadasSemana
+}
+else{
+    $promedioSem = 0
+}
 foreach ($key in $duracionLlamada.keys){
     $user = $key.Split("/")[0]
     if( $duracionLlamada[$key] -lt $promedioSem ){
@@ -146,10 +151,12 @@ foreach ($key in $duracionLlamada.keys){
 }
 Write-Output "El usuario con más llamadas con duración por debajo de la media semanal es:"
 $user = $callsBelowMediaUser.GetEnumerator() | Sort-Object -Property value -Descending -Top 1
-$item = New-Object System.Object
-$item | Add-Member -MemberType NoteProperty -Name "Usuario" -Value $user.name.Split("/")[0]
-$item | Add-Member -MemberType NoteProperty -Name "Cant. llamadas" -Value $user.value
-$item | Format-List
+if ($user){
+    $item = New-Object System.Object
+    $item | Add-Member -MemberType NoteProperty -Name "Usuario" -Value $user.name.Split("/")[0]
+    $item | Add-Member -MemberType NoteProperty -Name "Cant. llamadas" -Value $user.value
+    $item | Format-List
+}
 
 <#
 .Synopsis

@@ -120,11 +120,32 @@ SRC_PATH=`echo "$SRC_PATH" | sed 's/\/*$//'`
 DEST_PATH=`echo "$DEST_PATH" | sed 's/\/*$//'`
 
 declare -A empresas
+declare -A mayor_empresas
+
+for arch in $(ls "$SRC_PATH/" | grep -E $regex_log)
+do
+    emp=$(echo $arch | cut -f 1 -d "-")
+    numero=$(echo $arch | cut -f 2 -d "-" | cut -f 1 -d ".")
+    if [[ ${mayor_empresas[$emp]} ]]
+    then
+        if [ $numero -gt ${mayor_empresas[$emp]} ]
+        then
+            mayor_empresas[$emp]=$numero
+        fi
+    else
+        mayor_empresas[$emp]=$numero
+    fi
+done
 
 # Guardo en este array el nombre de la compañía de cada archivo válido y los archivos de esa empresa
-for emp in $(ls "$SRC_PATH/" | grep -E $regex_log | cut -f 1 -d "-")
+for emp in ${!mayor_empresas[*]}
 do
-    empresas[$emp]=$(ls -d "$SRC_PATH/"* | grep -E "$emp\-[0-9]+\.log$")
+    empresas[$emp]=$(ls -d "$SRC_PATH/"* | grep -E "$emp\-[0-9]+\.log$" | grep -vE "[a-zA-Z]+\/$emp\-${mayor_empresas[$emp]}\.log$")
+done
+
+for emp in ${!empresas[*]}
+do
+    echo "$emp ${empresas[$emp]}"
 done
 
 # Recorro las empresas
@@ -141,8 +162,8 @@ do
         gzip "$DEST_PATH/$emp.tar"
     fi
     # Hago un rm de los archivos del directorio de origen solo si fue exitosa la compresión de los archivos
-    if [ $? == 0 ]
-    then
-        ls -d "$SRC_PATH/"* | grep -E "$emp\-[0-9]+\.log$" | xargs rm
-    fi
+    #if [ $? == 0 ]
+    #then
+    #    ls -d "$SRC_PATH/"* | grep -E "$emp\-[0-9]+\.log$" | xargs rm
+    #fi
 done
