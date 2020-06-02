@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ejercicio_4.sh | Trabajo Práctico 1) Ejercicio4) | Primera reentrega
+# ejercicio_4.sh | Trabajo Práctico 1) Ejercicio4) | Segunda reentrega
 # Maximiliano José Bernardo | 41912800
 # Nicolás Agustín Fábregues | 41893896
 # Joela Belén Kachanosqui | 41917556
@@ -120,11 +120,34 @@ SRC_PATH=`echo "$SRC_PATH" | sed 's/\/*$//'`
 DEST_PATH=`echo "$DEST_PATH" | sed 's/\/*$//'`
 
 declare -A empresas
+declare -A mayor_empresas
+
+# Calculo el número de semana más alto entre los archivos válidos
+for arch in $(ls "$SRC_PATH/" | grep -E $regex_log)
+do
+    emp=$(echo $arch | cut -f 1 -d "-")
+    numero=$(echo $arch | cut -f 2 -d "-" | cut -f 1 -d ".")
+    if [[ ${mayor_empresas[$emp]} ]]
+    then
+        if [ $numero -gt ${mayor_empresas[$emp]} ]
+        then
+            mayor_empresas[$emp]=$numero
+        fi
+    else
+        mayor_empresas[$emp]=$numero
+    fi
+done
 
 # Guardo en este array el nombre de la compañía de cada archivo válido y los archivos de esa empresa
-for emp in $(ls "$SRC_PATH/" | grep -E $regex_log | cut -f 1 -d "-")
+for emp in ${!mayor_empresas[*]}
 do
-    empresas[$emp]=$(ls -d "$SRC_PATH/"* | grep -E "$emp\-[0-9]+\.log$")
+    # Excluyo al archivo con número de semana más alto entre los que voy a comprimir
+    archivos=$(ls -d "$SRC_PATH/"* | grep -E "$emp\-[0-9]+\.log$" | grep -vE "[a-zA-Z]+\/$emp\-${mayor_empresas[$emp]}\.log$")
+    # Compruebo que archivos tenga algo por el caso de tener un solo log válido
+    if [[ ! -z $archivos ]]
+    then
+        empresas[$emp]=$archivos
+    fi
 done
 
 # Recorro las empresas
@@ -143,6 +166,6 @@ do
     # Hago un rm de los archivos del directorio de origen solo si fue exitosa la compresión de los archivos
     if [ $? == 0 ]
     then
-        ls -d "$SRC_PATH/"* | grep -E "$emp\-[0-9]+\.log$" | xargs rm
+        echo ${empresas[$emp]} | xargs rm
     fi
 done
