@@ -1,4 +1,11 @@
 #!/usr/bin/pwsh
+# ejercicio_1.ps1 | Trabajo Práctico 2) Ejercicio 2) | Primera reentrega
+# Maximiliano José Bernardo | 41912800
+# Nicolás Agustín Fábregues | 41893896
+# Joela Belén Kachanosqui | 41917556
+# Alejandro Nicolás Tacchella | 41893930
+# Tomás Martín Vera | 41988332
+
 Param(
     [Parameter(Position = 1, Mandatory = $false)]
     [String] $pathSalida = ".\procesos.txt ",

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ejercicio_4.sh | Trabajo Práctico 1) Ejercicio4) | Primera reentrega
+# ejercicio_4.sh | Trabajo Práctico 1) Ejercicio4) | Segunda reentrega
 # Maximiliano José Bernardo | 41912800
 # Nicolás Agustín Fábregues | 41893896
 # Joela Belén Kachanosqui | 41917556
