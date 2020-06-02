@@ -69,7 +69,7 @@ foreach($item in $archivo){
                
             }
             #punto 2
-            if( ($final  -lt 4 -and  $final  -ne  "") -or (($p1  -lt  4 -and $recu  -ne  "1" ) -or ($recu -eq "1" -and $nRecu  -lt  4 )) -or (($p2  -lt  4 -and $recu  -ne  "2" ) -or ($recu -eq "2" -and $nRecu  -lt  4 )) ){
+            if( ($final  -lt 4 -and  $final  -ne  "") -or (($p1  -lt  4 -and $recu  -ne  "1" ) -or ($recu -eq "1" -and $nRecu  -lt  4 )) -and (($p2  -lt  4 -and $recu  -ne  "2" ) -or ($recu -eq "2" -and $nRecu  -lt  4 )) ){
                 $punto2[$idMateria]+=1
                
             }
