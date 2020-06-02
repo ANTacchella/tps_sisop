@@ -91,7 +91,7 @@ do
     if [[ $f =~ ^\-?[0-9]+\/\-?[0-9]+$ ]]
     then
         norm[${#norm[*]}]=$f
-    elif [[ $f =~ ^\-?[0-9]+\:\-?[0-9]+\/\-?[0-9]+$ ]]
+    elif [[ $f =~ ^\-?[0-9]+\:[0-9]+\/[0-9]+$ ]]
     then
         mix[${#mix[*]}]=$f
     elif [[ $f =~ ^\-?[0-9]+$ ]]
@@ -112,7 +112,14 @@ for f in ${mix[*]}
 do
     nums=($(echo $f | tr /[:/]/ "\n"))
     num=$(($num+${nums[0]}*$den))
-    num=$(($num*${nums[2]}+$den*${nums[1]}))
+
+    if [[ ${nums[0]} -lt 0 ]]
+    then
+        num=$(($num*${nums[2]}-$den*${nums[1]}))
+    else
+        num=$(($num*${nums[2]}+$den*${nums[1]}))
+    fi
+
     den=$(($den*${nums[2]}))
 done
 
