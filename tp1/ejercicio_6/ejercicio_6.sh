@@ -81,6 +81,7 @@ fracciones=$(echo `cat $archivo | tr "," "\n"`)
 
 declare -a norm
 declare -a mix
+declare -a ent
 
 num=1
 den=1
@@ -90,9 +91,12 @@ do
     if [[ $f =~ ^\-?[0-9]+\/\-?[0-9]+$ ]]
     then
         norm[${#norm[*]}]=$f
-    elif [[ $f =~ ^\-?[0-9]+\:\-?[0-9]+\/\-?[0-9]+$ ]]
+    elif [[ $f =~ ^\-?[0-9]+\:[0-9]+\/[0-9]+$ ]]
     then
         mix[${#mix[*]}]=$f
+    elif [[ $f =~ ^\-?[0-9]+$ ]]
+    then
+        ent[${#ent[*]}]=$f
     fi
 done
 
@@ -108,8 +112,20 @@ for f in ${mix[*]}
 do
     nums=($(echo $f | tr /[:/]/ "\n"))
     num=$(($num+${nums[0]}*$den))
-    num=$(($num*${nums[2]}+$den*${nums[1]}))
+
+    if [[ ${nums[0]} -lt 0 ]]
+    then
+        num=$(($num*${nums[2]}-$den*${nums[1]}))
+    else
+        num=$(($num*${nums[2]}+$den*${nums[1]}))
+    fi
+
     den=$(($den*${nums[2]}))
+done
+
+for f in ${ent[*]}
+do
+    num=$(($num+$f*$den))
 done
 
 num=$(($num*1-$den*1))
