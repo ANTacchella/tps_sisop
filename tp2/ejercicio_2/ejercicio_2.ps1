@@ -39,7 +39,9 @@ $file_data | ForEach-Object {
     if ( $vecLlamada.Contains($_.Usuario) ){
         $diaInicial = $vecLlamada[$_.Usuario].Split(" ")[0]
         $vecLlamada[$_.Usuario] = New-TimeSpan -Start $vecLlamada[$_.Usuario] -End $_.FechaHora 
-        
+        if ($vecLlamada[$_.Usuario] -lt 0) {
+            $vecLlamada[$_.Usuario] = $vecLlamada[$_.Usuario].Negate()
+        }
         #Punto 1
         $totalTiempo[$diaInicial] = $totalTiempo[$diaInicial] + $vecLlamada[$_.Usuario]
         $cantLlamadas[$diaInicial]++
