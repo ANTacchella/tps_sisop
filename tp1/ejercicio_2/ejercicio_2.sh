@@ -177,7 +177,8 @@ BEGIN{
     if( $2 in tiempoLlamadas ) {
         
         tiempoLlamadas[$2]=hora - tiempoLlamadas[$2];
-        
+        tiempoLlamadas[$2]*=(tiempoLlamadas[$2]<0?-1:1);
+
         #punto 1
         totalHoy=totalHoy + tiempoLlamadas[$2];
         cantLlamadasHoy++;
