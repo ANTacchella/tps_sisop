@@ -68,22 +68,30 @@ foreach($item in $archivo){
                 $punto1[$idMateria]+=1
                
             }
-            #punto 2
-            if( ($final  -lt 4 -and  $final  -ne  "") -or (($p1  -lt  4 -and $recu  -ne  "1" ) -or ($recu -eq "1" -and $nRecu  -lt  4 )) -or (($p2  -lt  4 -and $recu  -ne  "2" ) -or ($recu -eq "2" -and $nRecu  -lt  4 )) ){
-                $punto2[$idMateria]+=1
-               
-            }
-            #punto 3
-            if($nRecu -eq "" -and ( ($p1 -lt 7 -and $p1 -ne "" ) -or ($p2 -lt 7 -and $p2 -ne "") ) ){
-                $punto3[$idMateria]+=1
-       
-            }
-            #punto 4
-            if( ($p1 -eq "" -and $recu -eq "1" -and $nRecu -eq "") -or ($p1 -eq "" -and $recu -ne "1") -or ($p2 -eq "" -and $recu -eq "2" -and $nRecu -eq "") -or ($p2 -eq "" -and $recu -ne 2) ){
-                $punto4[$idMateria]+=1
-               
-            }
+            else{
+                #punto 2
+                if( ($final  -lt 4 -and  $final  -ne  "") -or (($p1  -lt  4 -and $recu  -ne  "1" ) -or ($recu -eq "1" -and $nRecu  -lt  4 )) -or (($p2  -lt  4 -and $recu  -ne  "2" ) -or ($recu -eq "2" -and $nRecu  -lt  4 )) ){
+                    $punto2[$idMateria]+=1
+                
+                }else{
+                    #punto 3
+                    if($nRecu -eq "" -and ( ($p1 -lt 7 -and $p1 -ne "" ) -or ($p2 -lt 7 -and $p2 -ne "") ) ){
+                        $punto3[$idMateria]+=1
+            
+                    }
+                    else{
+                        #punto 4
+                        if( ($p1 -eq "" -and $recu -eq "1" -and $nRecu -eq "") -or ($p1 -eq "" -and $recu -ne "1") -or ($p2 -eq "" -and $recu -eq "2" -and $nRecu -eq "") -or ($p2 -eq "" -and $recu -ne 2) ){
+                            $punto4[$idMateria]+=1
+                        
+                        }
 
+                    }
+
+                }
+
+            }
+            
         }
     }
     else{
