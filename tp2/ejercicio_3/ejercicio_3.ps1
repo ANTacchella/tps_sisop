@@ -1,6 +1,6 @@
 #!/usr/bin/pwsh
 
-# ejercicio_3.ps1 | Trabajo Práctico 2) Ejercicio 3) | Primera reentrega
+# ejercicio_3.ps1 | Trabajo Práctico 2) Ejercicio 3) | Segunda reentrega
 # Maximiliano José Bernardo | 41912800
 # Nicolás Agustín Fábregues | 41893896
 # Joela Belén Kachanosqui | 41917556
