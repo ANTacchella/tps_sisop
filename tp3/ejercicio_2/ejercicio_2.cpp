@@ -87,7 +87,7 @@ int main(int argc, char** argv)
         cout << info << endl;
         return EXIT_FAILURE;
     }
-    else if(argc < 2){
+    else if(argc > 2){
         cout << "¡ERROR!: El programa debe recibir un único parámetro" << endl;
         cout << info << endl;
         return EXIT_FAILURE;
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
         cout << info << endl;
         return EXIT_FAILURE;
     }
-    //Array con los threads que calcularán la suma los n elementos de la sucesión Fibonacci
+    //Array con los threads que calcularán la suma de los n elementos de la sucesión Fibonacci
     vector<thread> fiboAcumVector;
     //Array de objetos hiloFibonacci para construir cada thread
     vector<hiloFibonacci> hf_array(n);
