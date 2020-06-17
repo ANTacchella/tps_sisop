@@ -16,10 +16,13 @@
 # Tomás Martín Vera | 41988332
 */
 
-
+pid_t pid_control = -1 ; //Global
+pid_t pid_registro = -1 ; //Global
 
 void signalHandler( int sig ){
     //Aca deberiamos matar a los hijos.
+
+    return EXIT_SUCCESS;
 }
 
 
@@ -28,36 +31,40 @@ int main()
     //signal handler SIGUSR1
     signal( SIGUSR1, &signalHandler );
 
-
-
     //crear hijos y dejarlos en segundo plano
-    pid_t  pid_control, pid_registro;
     
     pid_control = fork(); //Creo a Control
     if (pid_control == 0)
     {
         //Codigo Hijo Control
+        while( 1 ){
+
+
+            sleep(1);
+        }
     }
     else{
         pid_registro = fork(); //Creo a Registro
         if (pid_registro == 0)
         {
             //Codigo Hijo Registro
+            while( 1 ){
+
+                
+            sleep(1);
+        }
         }
     }
     
     
-    
+    while( 1 ){
+
+
+        sleep(1);
+    }
     
     
     //podriamos crear FIFO aca tambien
-    
-    
-    
-    
-    
-    
-    
     
     
     
