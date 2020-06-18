@@ -13,7 +13,7 @@ info="Para más información ejecute $0 -h o $0 --help"
 Help(){
     echo "######    HELP $0     ######"
     echo -e "\nEste script se encargará de procesar los datos proporcionados por la universidad y devolver un resumen de resultados por materia."
-    echo -e "Aclaración:\n-Si un mismo alumno cumple las condiciones puede tener más de un estado para la misma materia.\n"
+    echo -e "Aclaración:\n-Un alumno puede cumplir con una sola condicion como maximo, en caso de que.\n-Para Recursar  hay que tener ambos parciales con notas menores a 4, el recuperatorio tiene prioridad sobre el primer parcial.\n "
     echo -e "\nEl script recibe un único parámetro:\n-f 'path': ruta del archivo de entrada ya sea de manera relativa o absoluta"
 }
 
