@@ -57,22 +57,22 @@ foreach($item in $archivo){
 
             $alu_materia[$clave] = $clave
             
-            $p1 = $item.PrimerParcial
-            $p2 = $item.SegundoParcial
-            $recu = $item.RecuParcial
-            $nRecu = $item.RecuNota
-            $final = $item.Final
+            [float]$p1 =  [float]$item.PrimerParcial
+            [float]$p2 =  [float]$item.SegundoParcial
+            [float]$recu =  [float]$item.RecuParcial
+            [float]$nRecu =  [float]$item.RecuNota
+            [float]$final =  [float]$item.Final
 
             #punto 1
-            if( ((4 -le $p1 -and $p1 -le 6 -and $recu -ne "1" ) -or ($recu -eq "1" -and 4 -le $nRecu -and $nRecu -le 6) -or ($recu -eq "1" -and 6 -lt $nRecu -and  4 -le $p2 -and $p2 -le 6)) -and (( 4 -le $p2 -and $p2 -le  6 -and $recu -ne "2") -or ($recu -eq "2" -and 4 -le $nRecu -and $nRecu -le 6) -or ($recu -eq "2" -and 6 -lt $nRecu -and 4 -le $p1 -and $p1 -le 6)) -and $final -eq ""  ){
+            if( ((4 -le $p1 -and $p1 -le 6 -and $recu -ne "1" ) -or ($recu -eq "1" -and 4 -le $nRecu -and $nRecu -le 6) -or ($recu -eq "1" -and 6 -lt $nRecu -and  4 -le $p2 -and $p2 -le 6)) -and (( 4 -le $p2 -and $p2 -le 6 -and $recu -ne "2") -or ($recu -eq "2" -and 4 -le $nRecu -and $nRecu -le 6) -or ($recu -eq "2" -and 6 -lt $nRecu -and 4 -le $p1 -and $p1 -le 6)) -and $final -eq ""  ){
                 $punto1[$idMateria]+=1
                
             }
             else{
                 #punto 2
-                if( ($final  -lt 4 -and  $final  -ne  "") -or (($p1  -lt  4 -and $recu  -ne  "1" ) -or ($recu -eq "1" -and $nRecu  -lt  4 )) -and (($p2  -lt  4 -and $recu  -ne  "2" ) -or ($recu -eq "2" -and $nRecu  -lt  4 )) ){
+                if( ($final -lt 4 -and $final -ne "") -or ( (($p1 -lt 4 -and $recu -ne "1" ) -or ($recu -eq "1" -and $nRecu -lt 4 )) -and (($p2 -lt 4 -and $recu -ne "2" ) -or ($recu -eq "2" -and $nRecu  -lt 4 )) )){
                     $punto2[$idMateria]+=1
-                
+                    
                 }else{
                     #punto 3
                     if($nRecu -eq "" -and ( ($p1 -lt 7 -and $p1 -ne "" ) -or ($p2 -lt 7 -and $p2 -ne "") ) ){
