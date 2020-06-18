@@ -127,6 +127,9 @@ $salida | export-csv -Path .\res_materias.txt -NoTypeInformation
     Este script recibe un archivo de notas de alumnos y lo analiza para indicar por cada materia, cuantos alumnos recursan,cuantos pueden recuperar, cuantos tienen que ir a final y cuantos abandonaron.
 .Description
     El script ejercicio_5.ps1 recibe como parámetros el archivo de alumnos para analizar, la primera linea del archivo no se toma encuenta porque se supone que son los titulos de cada columna.
+    Aclaracións:
+        -Un alumno puede cumplir con una sola condicion como maximo.
+        -Para Recursar  hay que tener ambos parciales con notas menores a 4, el recuperatorio tiene prioridad sobre el primer parcial.
 .Example
     ./ejercicio_5.ps1 -Nomina ./alumnos.csv o ./alumnos.txt
 .Notes
