@@ -1,0 +1,5 @@
+Alejandro;Tacchella;12345;Vóley;Jueves
+Nicolás;Fábregues;47563;Natación;Sábado
+Joela;Kachanosqui;84369;Básquet;Viernes
+Maximiliano;Bernardo;75198;Vóley;Martes
+Tomás;Vera;74125;Fútbol;Lunes
