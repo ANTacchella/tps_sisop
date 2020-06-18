@@ -682,7 +682,6 @@ int main(int argc, char* argv[]){
 
         //Espero a que los procesos hijos terminen
         while((wpid = wait(&status)) > 0);
-        printf("\nTerminado\n");
     }
 
     return 0;
