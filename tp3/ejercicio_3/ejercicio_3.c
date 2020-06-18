@@ -247,7 +247,47 @@ int get_incorrect_asists(const t_soc *socios,int cant_soc,const t_asis *asist,in
  
 }
 
+void help(){
+    printf("\n######    HELP Ejercicio_3    ######\n");
+    printf("\n\nEste programa recibe por parámetro un directorio, en el cual se\n");
+    printf("encuentran los archivos socios.txt, pagos.txt y asistencias.txt del club\n");
+    printf("y se encarga de analizarlos para obtener el total recaudado en el mes,\n");
+    printf("qué socios no han pagado su cuota y quiénes han asistido en día incorrecto.\n\n");
+    printf("El programa recibe un único parámetro el cuál es el directorio donde se\n");
+    printf("encuentran los tres archivos, y debe ejecutarse de una de las siguientes maneras\n\n");
+    printf("--> ./Ejercicio_3 directorio\n\n--> ./Ejercicio_3 -p directorio\n\n--> ./Ejercicio_3 --path directorio\n");
+}
+
 int main(int argc, char* argv[]){
+
+    if(argc != 3 && argc != 2){
+        printf("\nError! Este programa debe recibir solo UN parámetro. Para más información ejecute ./Ejercicio_3 -h, ./Ejercicio_3 --help o ./Ejercicio_3 -?\n");
+        exit(1);
+    }
+
+    if( !strcmp("-h", argv[1]) || !strcmp("-?", argv[1]) || !strcmp("--help", argv[1]) ){
+        help();
+        return EXIT_SUCCESS;
+    }
+
+    char path[100];
+
+    if(argc == 3){
+        if(strcmp(argv[1],"-p") && strcmp(argv[1],"--path")){
+            printf("\nError de parámetros! Para más información ejecute ./Ejercicio_3 -h, ./Ejercicio_3 --help o ./Ejercicio_3 -?\n");
+            exit(1);
+        }
+
+        strcpy(path,argv[2]);
+    }
+    else{
+        strcpy(path,argv[1]);
+    }
+
+    char path_soc[100],path_pagos[100],path_asist[100];
+    strcat(strcpy(path_soc,path), "/socios.txt"); 
+    strcat(strcpy(path_pagos,path), "/pagos.txt"); 
+    strcat(strcpy(path_asist,path), "/asistencia.txt"); 
     
     //Declaro punteros a semáforos
     sem_t *psem_pagos,*psem_asist;
@@ -280,7 +320,7 @@ int main(int argc, char* argv[]){
                 //****LECTURA ARCHIVO DE PAGOS****
 
                 //Calculo la cantidad de registros en el archivo de pagos
-                int cant_reg = contar_registros_archivo("./pagos.txt");
+                int cant_reg = contar_registros_archivo(path_pagos);
 
                 if(cant_reg == -1){
                     printf("\nError al abrir el archivo de pagos!!\n");
@@ -290,7 +330,7 @@ int main(int argc, char* argv[]){
                 char buf[200];
                 
                 //Abro el archivo de pagos en modo lectura de texto
-                FILE *fp = fopen("./pagos.txt","rt");
+                FILE *fp = fopen(path_pagos,"rt");
                 if(fp == NULL){
                     perror("\nError al abrir el archivo de pagos!!\n");
                     exit(1);
@@ -362,7 +402,7 @@ int main(int argc, char* argv[]){
                 //****LECTURA ARCHIVO DE ASISTENCIAS****
 
                 //Calculo la cantidad de registros en el archivo de asistencias
-                int cant_reg = contar_registros_archivo("./asistencia.txt");
+                int cant_reg = contar_registros_archivo(path_asist);
 
                 if(cant_reg == -1){
                     printf("\nError al abrir el archivo de asistencias!!\n");
@@ -370,7 +410,7 @@ int main(int argc, char* argv[]){
                 }
 
                 //Abro el archivo de asistencias en modo lectura de texto
-                FILE *fp = fopen("./asistencia.txt","rt");
+                FILE *fp = fopen(path_asist,"rt");
                 if(fp == NULL){
                     perror("\nError al abrir el archivo de asistencias!!\n");
                     exit(1);
@@ -541,7 +581,7 @@ int main(int argc, char* argv[]){
                 //****LECTURA ARCHIVO DE SOCIOS****
 
                 //Calculo la cantidad de registros en el archivo de socios
-                cant_soc = contar_registros_archivo("./socios.txt");
+                cant_soc = contar_registros_archivo(path_soc);
                 if(cant_soc == -1){
                     printf("\nError al abrir el archivo de socios!!\n");
                     exit(1);
@@ -552,7 +592,7 @@ int main(int argc, char* argv[]){
                 }
 
                 //Abro el archivo de socios en modo lectura de texto
-                FILE *fp = fopen("./socios.txt","rt");
+                FILE *fp = fopen(path_soc,"rt");
                 if(fp == NULL){
                     printf("\nError al abrir el archivo de socios!!\n");
                     exit(1);
