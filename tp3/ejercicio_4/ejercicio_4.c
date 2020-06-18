@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
                         strcpy( tipo_de_exceso, "AMBOS");
                     }
 
-                    sprintf(string_registro,"%d %s %s", (&ps_info)->pid, (&ps_info)->comm, tipo_de_exceso);
+                    sprintf(string_registro,"%d %s %s", (&ps_info)->pid, (&ps_info)->comm, tipo_de_exceso); //Falta agregar Hora del sistema
                     //printf("SUPERA LIMITE:  %d %s %s\n", (&ps_info)->pid, (&ps_info)->comm, tipo_de_exceso);
                     
                     
