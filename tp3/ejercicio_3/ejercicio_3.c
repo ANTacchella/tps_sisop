@@ -9,11 +9,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define SHM_PAGOS "/shmPagos"
-#define SHM_ASIST "/shmAsist"
+#define SHM_PAGOS "/shmPagos" //Nombre del objeto de memoria compartida de pagos
+#define SHM_ASIST "/shmAsist" //Nombre del objeto de memoria compartida de asistencias
 
-#define SEM_PAGOS "sem_pagos"
-#define SEM_ASIST "sem_asist"
+#define SEM_PAGOS "sem_pagos" //Nombre del semáforo de de pagos
+#define SEM_ASIST "sem_asist" //Nombre del semáforo de de asistencias
 
 typedef struct
 {
@@ -49,6 +49,7 @@ typedef struct{
     char dia_inc[20];
 }t_inc_asis;
 
+//Datos de los deportes
 void cargar_cuotas(t_cuota vec[]){
     strcpy(vec[0].dep,"Fútbol");
     strcpy(vec[0].dia,"Lunes");
@@ -75,6 +76,7 @@ void cargar_cuotas(t_cuota vec[]){
     vec[5].cuota = 1800;
 }
 
+//Función que parsea los datos de un string a un t_soc
 void text_to_soc(const char *cad,t_soc *soc){
     char nom[90],ape[90],dep[90],dia[90];
     int c;
@@ -86,6 +88,7 @@ void text_to_soc(const char *cad,t_soc *soc){
     strncpy(soc->dia,dia,sizeof(soc->dia));
 }
 
+//Función que parsea los datos de un string a un t_pago
 void text_to_pago(const char *cad, t_pago *pago){
     char fecha[90];
     int c;
@@ -95,6 +98,7 @@ void text_to_pago(const char *cad, t_pago *pago){
     strncpy(pago->fecha,fecha,sizeof(pago->fecha));
 }
 
+//Función que parsea los datos de un string a un t_asis
 void text_to_asist(const char *cad, t_asis *asist){
     char dia[90];
     int c;
@@ -104,6 +108,7 @@ void text_to_asist(const char *cad, t_asis *asist){
     strncpy(asist->dia,dia,sizeof(asist->dia));
 }
 
+//Función para calcular el importe de un pago evaluando el descuento
 float calcular_importe(t_pago *pago, const t_soc *socios, int cant_soc){
 
     t_cuota cuotas[6];
@@ -151,10 +156,9 @@ float calcular_importe(t_pago *pago, const t_soc *socios, int cant_soc){
         break;
     }
 
-    return 2.3;
-
 }
 
+//Función para listar a todos los socios que no pagaron la cuota mensual
 void listar_deudores(int cant_soc,int cant_pagos,const t_soc *socios,const t_pago *pagos){
     int pagado, k = 0;
     t_soc deudores[cant_soc - cant_pagos];
@@ -189,6 +193,7 @@ void listar_deudores(int cant_soc,int cant_pagos,const t_soc *socios,const t_pag
 
 }
 
+//Función para contar la cantidad de registros en un archivo
 int contar_registros_archivo(const char *path){
 
     int cont = 0;
@@ -209,6 +214,7 @@ int contar_registros_archivo(const char *path){
     return cont;
 }
 
+//Función para obtener los datos de asistencias que no corresponden
 int get_incorrect_asists(const t_soc *socios,int cant_soc,const t_asis *asist,int cant_asist,t_inc_asis inc_asist[]){
 
     int cont = 0;
@@ -238,31 +244,42 @@ int get_incorrect_asists(const t_soc *socios,int cant_soc,const t_asis *asist,in
     }
 
     return cont;
-
+ 
 }
 
-int main(){
+int main(int argc, char* argv[]){
     
+    //Declaro punteros a semáforos
     sem_t *psem_pagos,*psem_asist;
 
+    //Creo dos semáforos, uno para el proceso de pagos y otro para el proceso de asistencias
+    //Ambos inicializados en 0
     psem_pagos = sem_open(SEM_PAGOS, O_CREAT, 00700, 0);
     psem_asist = sem_open(SEM_ASIST, O_CREAT, 00700, 0);
 
+    //Cierro los semáforos ya que no se usan en el proceso padre
     sem_close(psem_pagos);
     sem_close(psem_asist);
 
     pid_t pid;
 
+    //Utilizo un for de 0 a 2 para crear los 3 procesos necesarios con fork
     for(int i = 0; i < 3; i++){
 
+        //Error de fork
         if((pid = fork()) == -1){
             perror("\nError al crear el nuevo proceso!!\n");
             exit(1);
         }
+        //Es proceso hijo
         else if(pid == 0){
 
-            if(i == 0){ //Proceso productor para archivo de pagos
+            //Proceso productor para archivo de pagos
+            if(i == 0){ 
 
+                //****LECTURA ARCHIVO DE PAGOS****
+
+                //Calculo la cantidad de registros en el archivo de pagos
                 int cant_reg = contar_registros_archivo("./pagos.txt");
 
                 if(cant_reg == -1){
@@ -270,18 +287,19 @@ int main(){
                     exit(1);
                 }
 
-                char *line = NULL;
-                size_t len = 0;
-                ssize_t read;
                 char buf[200];
                 
+                //Abro el archivo de pagos en modo lectura de texto
                 FILE *fp = fopen("./pagos.txt","rt");
                 if(fp == NULL){
                     perror("\nError al abrir el archivo de pagos!!\n");
                     exit(1);
                 }
 
+                //Creo un array de t_pago con espacio para todos los registros del archivo
                 t_pago pagos[cant_reg];
+
+                //Leo todo el archivo de pagos y cargo los datos en el array de t_pago
                 int j = 0;
                 while(fgets(buf,sizeof(buf),fp) != NULL)
                 {
@@ -289,40 +307,61 @@ int main(){
                     j++;
                 }
 
+                //Cierro el archivo de pagos
+                fclose(fp);
+
+                //****TRABAJO CON MEMORIA COMPARTIDA****
+
                 int fd;
                 void *ptr;
 
+                //Creo un objeto de memoria compartida (flag O_CREAT) y lo habilito para lectura escritura (flag O_RDWR)
                 fd = shm_open(SHM_PAGOS, O_CREAT | O_RDWR, 00700);
+
+                //Error al crear el objeto de memoria compartida
                 if(fd == -1){
                     printf("\nError al crear el File Descriptor!!\n");
                     exit(1);
                 }
 
-                if(ftruncate(fd, sizeof(int) + cant_reg * sizeof(t_pago)) == -1){
+                //Le doy un tamaño a la memoria compartida
+                //En este caso el de un entero para guardar la cantidad de registros de pagos
+                // más el tamaño del array de pagos
+                if(ftruncate(fd, sizeof(int) + sizeof(pagos)) == -1){
                     printf("\nError al configurar el tamaño de la memoria compartida!!\n");
                     exit(1);
                 }
 
-                ptr = mmap(NULL,sizeof(int) + cant_reg * sizeof(t_pago), PROT_WRITE, MAP_SHARED, fd, 0);
+                //Mapeo el objeto de memoria compartida en nuestra memoria virtual del programa para poder trabajar con ella
+                ptr = mmap(NULL,sizeof(int) + sizeof(pagos), PROT_WRITE, MAP_SHARED, fd, 0);
                 if(ptr == MAP_FAILED){
                     printf("\nMapeo falló en el proceso de escritura!!\n");
                     exit(1);
                 }
 
+                //Copio al espacio de memoria compartida el entero con la cantidad de pagos
                 memcpy(ptr,&cant_reg,sizeof(int));
+                //Copio al espacio de memoria compartida el array de pagos
                 memcpy(ptr + sizeof(int), pagos, sizeof(pagos));
 
+                //Cierro el acceso al objeto de memoria
                 close(fd);
-                fclose(fp);
 
+                //Abro el semáforo de pagos
                 psem_pagos = sem_open(SEM_PAGOS, O_CREAT);
+                //Incremento el semáforo
                 sem_post(psem_pagos);
+                //Cierro el semáforo
                 sem_close(psem_pagos);
 
             }
 
-            if(i == 1){  //Proceso productor para archivo de asistencias
+            //Proceso productor para archivo de asistencias
+            if(i == 1){  
 
+                //****LECTURA ARCHIVO DE ASISTENCIAS****
+
+                //Calculo la cantidad de registros en el archivo de asistencias
                 int cant_reg = contar_registros_archivo("./asistencia.txt");
 
                 if(cant_reg == -1){
@@ -330,123 +369,178 @@ int main(){
                     exit(1);
                 }
 
+                //Abro el archivo de asistencias en modo lectura de texto
                 FILE *fp = fopen("./asistencia.txt","rt");
                 if(fp == NULL){
                     perror("\nError al abrir el archivo de asistencias!!\n");
                     exit(1);
                 }
 
-                char *line = NULL;
-                size_t len = 0;
-                ssize_t read;
+                char buf[200];
 
+                //Creo un array de t_asis con espacio para todos los registros del archivo
                 t_asis asists[cant_reg];
+
+                //Leo todo el archivo de asistencias y cargo los datos en el array de t_asis
                 int j = 0;
-                while((read = getline(&line,&len,fp)) != -1)
+                while(fgets(buf,sizeof(buf),fp) != NULL)
                 {
-                    text_to_asist(line,&asists[j]);
+                    text_to_asist(buf,&asists[j]);
                     j++;
                 }
+
+                //Cierro el archivo de asistencias
+                fclose(fp);
+
+                //****TRABAJO CON MEMORIA COMPARTIDA****
 
                 int fd;
                 void *ptr;
 
+                //Creo un objeto de memoria compartida (flag O_CREAT) y lo habilito para lectura escritura (flag O_RDWR)
                 fd = shm_open(SHM_ASIST, O_CREAT | O_RDWR, 00700);
+
+                //Error al crear el objeto de memoria compartida
                 if(fd == -1){
                     printf("\nError al crear el File Descriptor!!\n");
                     exit(1);
                 }
 
+                //Le doy un tamaño a la memoria compartida
+                //En este caso el de un entero para guardar la cantidad de registros de asistencia
+                // más el tamaño del array de asistencias
                 if(ftruncate(fd, sizeof(int) + cant_reg * sizeof(t_asis)) == -1){
                     printf("\nError al configurar el tamaño de la memoria compartida!!\n");
                     exit(1);
                 }
 
+                //Mapeo el objeto de memoria compartida en nuestra memoria virtual del programa para poder trabajar con ella
                 ptr = mmap(NULL,sizeof(int) + cant_reg * sizeof(t_asis), PROT_WRITE, MAP_SHARED, fd, 0);
                 if(ptr == MAP_FAILED){
                     printf("\nMapeo falló en el proceso de escritura!!\n");
                     exit(1);
                 }
 
+                //Copio al espacio de memoria compartida el entero con la cantidad de asistencias
                 memcpy(ptr,&cant_reg,sizeof(cant_reg));
+                //Copio al espacio de memoria compartida el array de asistencias
                 memcpy(ptr + sizeof(cant_reg), asists, sizeof(asists));
 
-
+                //Cierro el acceso al objeto de memoria
                 close(fd);
-                fclose(fp);
 
+                //Abro el semáforo de asistencias
                 psem_asist = sem_open(SEM_ASIST, O_CREAT);
+                //Incremento el semáforo
                 sem_post(psem_asist);
+                //Cierro el semáforo
                 sem_close(psem_asist);
             }
 
-            if(i == 2){ //Proceso consumidor
+            //Proceso consumidor
+            if(i == 2){ 
 
                 int cant_soc,cant_asist,cant_pagos,reg_size;
-                char *line = NULL;
-                size_t len = 0;
-                ssize_t read;
+
                 char buf[200];
 
+                //****TRABAJO CON MEMORIA COMPARTIDA DE PAGOS****
+
+                //Abro los semáforos de pagos y asistencias
                 psem_pagos = sem_open(SEM_PAGOS, O_CREAT);
                 psem_asist = sem_open(SEM_ASIST, O_CREAT);
 
+                //Intento decrementar el semáforo de pagos
+                //Si el valor el semáforo es mayor que cero prosigue 
+                // y si es cero el proceso se bloquea hasta que sea incrementado por otro proceso
                 sem_wait(psem_pagos);
 
                 int fd;
                 void *ptr;
                 struct stat shmobj_st;
 
+                //Abro el objeto de memoria compartida de pagos en modalidad de lectura-escritura
                 fd = shm_open(SHM_PAGOS, O_RDWR, 00400);
+
+                //Error al abrir el objeto de memoria compartida
                 if(fd == -1){
                     printf("\nError al crear el File Descriptor!!\n");
                     exit(1);
                 }
 
+                //Cargo en la estructura de tipo stat las especificaciones del objeto de memoria para obtener su tamaño
                 if(fstat(fd, &shmobj_st) == -1){
                     printf("\nError del fstat!!\n");
                     exit(1);
                 }
 
+                //Mapeo el objeto de memoria compartida en nuestra memoria virtual del programa para poder trabajar con ella
                 ptr = mmap(NULL, shmobj_st.st_size, PROT_READ, MAP_SHARED, fd, 0);
                 if(ptr == MAP_FAILED){
                     printf("\nError del mapeo en el proceso de lectura!!\n");
                     exit(1);
                 }
 
+                //Copio la cantidad de pagos desde la memoria compartida a una variable del programa
                 memcpy(&cant_pagos,ptr,sizeof(int));
+
+                //Creo un array de pagos con espacio para todos los pagos 
                 t_pago pagos[cant_pagos];
+                //Copio las estructuras de pago desde memoria compartida al array creado
                 memcpy(pagos, ptr+sizeof(int), sizeof(pagos));     
 
-                sem_unlink(SEM_PAGOS);
-
+                //Cierro el objeto de memoria compartida de pagos
                 close(fd);
 
+                //Elimino el semáforo de pagos
+                sem_unlink(SEM_PAGOS);
+
+                //****TRABAJO CON MEMORIA COMPARTIDA DE ASISTENCIAS****
+
+                //Intento decrementar el semáforo de asistencias
+                //Si el valor el semáforo es mayor que cero prosigue 
+                // y si es cero el proceso se bloquea hasta que sea incrementado por otro proceso
+                sem_wait(psem_asist);
+
+                //Abro el objeto de memoria compartida de asistencias en modalidad de lectura-escritura
                 fd = shm_open(SHM_ASIST, O_RDWR, 00400);
+
+                //Error al abrir el objeto de memoria compartida
                 if(fd == -1){
                     printf("\nError al crear el File Descriptor!!\n");
                     exit(1);
                 }
 
+                //Cargo en la estructura de tipo stat las especificaciones del objeto de memoria para obtener su tamaño
                 if(fstat(fd, &shmobj_st) == -1){
                     printf("\nError del fstat!!\n");
                     exit(1);
                 }
 
+                //Mapeo el objeto de memoria compartida en nuestra memoria virtual del programa para poder trabajar con ella
                 ptr = mmap(NULL, shmobj_st.st_size, PROT_READ, MAP_SHARED, fd, 0);
                 if(ptr == MAP_FAILED){
                     printf("\nError del mapeo en el proceso de lectura!!\n");
                     exit(1);
                 }
 
+                //Copio la cantidad de asistencias desde la memoria compartida a una variable del programa
                 memcpy(&cant_asist,ptr,sizeof(int));
+
+                //Creo un array de asistencias con espacio para todas las asistencias
                 t_asis asists[cant_asist];
+                //Copio las estructuras de asistencia desde memoria compartida al array creado
                 memcpy(asists, ptr+sizeof(int), sizeof(asists));     
 
-                sem_unlink(SEM_ASIST);
-
+                //Cierro el objeto de memoria compartida de asistencias
                 close(fd);
 
+                //Elimino el semáforo de asistencias
+                sem_unlink(SEM_ASIST);
+                
+                //****LECTURA ARCHIVO DE SOCIOS****
+
+                //Calculo la cantidad de registros en el archivo de socios
                 cant_soc = contar_registros_archivo("./socios.txt");
                 if(cant_soc == -1){
                     printf("\nError al abrir el archivo de socios!!\n");
@@ -457,13 +551,17 @@ int main(){
                     exit(1);
                 }
 
+                //Abro el archivo de socios en modo lectura de texto
                 FILE *fp = fopen("./socios.txt","rt");
                 if(fp == NULL){
                     printf("\nError al abrir el archivo de socios!!\n");
                     exit(1);
                 }
 
+                //Creo un array de t_soc con espacio para todos los registros del archivo
                 t_soc socios[cant_soc];
+
+                //Leo todo el archivo de socios y cargo los datos en el array de t_soc
                 int j = 0;
                 while(fgets(buf,sizeof(buf),fp) != NULL)
                 {
@@ -471,28 +569,46 @@ int main(){
                     j++;
                 }
 
+                //Cierro el archivo de socios
                 fclose(fp);
 
+                //****CÁLCULO LOS REQUISITOS DEL PROGRAMA****
+
+                //****MONTO TOTAL COBRADO EN EL MES****
+
+                //Acumulador para el monto cobrado en el mes
                 float monto_total = 0;
 
+                //Calculo el importe de cada pago realizado y lo sumo al acumulador
                 for(j = 0; j < cant_pagos; j++){
                     monto_total += calcular_importe(&pagos[j],socios,cant_soc);
                 }
 
+                //Imprimo en pantalla el monto recaudado
                 printf("*****************************************MONTO RECAUDADO ESTE MES*****************************************\n\n");
                 printf("\t\t\t\t\t\t%.2f $\n\n",monto_total);
                 printf("**********************************************************************************************************\n\n");
 
+                //****SOCIOS QUE NO PAGARON LA CUOTA MENSUAL****
+
+                //Si hay menos pagos registrados que socios los listo
                 if(cant_pagos < cant_soc){
                     listar_deudores(cant_soc,cant_pagos,socios,pagos);
                 }
+                //Sino imprimo que no hay deudores
                 else{
                     printf("NO SE REGISTRAN DEUDAS ESTE MES!\n\n");
                 }
 
+                //****ASISTENCIAS QUE NO CORRESPONDEN****
+
+                //Creo un array de asistencias incorrectas 
                 t_inc_asis inc_asist[cant_soc];
+
+                //Obtengo la cantidad de asistencias incorrectas y populo el array con los datos de las mismas
                 int cant_inc_asist = get_incorrect_asists(socios,cant_soc,asists,cant_asist,inc_asist);
 
+                //Si existen asistencias que no corresponden las listo
                 if(cant_inc_asist > 0){
 
                     printf("*************************************ASISTENCIAS QUE NO CORRESPONDEN**************************************\n\n");
@@ -504,6 +620,7 @@ int main(){
                     printf("**********************************************************************************************************\n\n");
 
                 }
+                //Sino imprimo que no hay asistencias que no corresponden
                 else{
                     printf("NO SE REGISTRAN ASISTENCIAS QUE NO CORRESPONDEN ESTE MES!\n\n");
 
@@ -511,15 +628,19 @@ int main(){
 
             }
 
+            //Break para que no se sigan realizando forks dentro de los procesos hijos
             break;
 
         }
 
     }
 
+    //En el proceso padre
     if(pid != 0){
         pid_t wpid;
         int status = 0;
+
+        //Espero a que los procesos hijos terminen
         while((wpid = wait(&status)) > 0);
         printf("\nTerminado\n");
     }

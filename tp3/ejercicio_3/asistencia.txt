@@ -1,5 +1,5 @@
 84369;Viernes
 74125;Lunes
-12345;Domingo
+12345;Jueves
 47563;Sábado
 75198;Martes
