@@ -7,6 +7,7 @@
 #include <stdlib.h> 
 #include <signal.h>
 #include <wait.h>
+#include <time.h>
 
 /*
 ejercicio_4.c | Trabajo Práctico 3) Ejercicio 4) | Primera Entrega
@@ -115,6 +116,8 @@ int main(int argc, char* argv[])
         char tipo_de_exceso[8];
         int cont = 0;
         char string_registro[40];
+        time_t now;
+        struct tm * timeinfo;
 
         //Codigo Hijo Control
         while(1){
@@ -144,8 +147,11 @@ int main(int argc, char* argv[])
                         strcpy( tipo_de_exceso, "AMBOS");
                     }
 
-                    sprintf(string_registro,"%d %s %s", (&ps_info)->pid, (&ps_info)->comm, tipo_de_exceso); //Falta agregar Hora del sistema
-                    //printf("SUPERA LIMITE:  %d %s %s\n", (&ps_info)->pid, (&ps_info)->comm, tipo_de_exceso);
+                    time(&now);
+                    timeinfo = localtime (&now);
+                   
+                    sprintf(string_registro,"%d %s %s %d:%d:%d", (&ps_info)->pid, (&ps_info)->comm, tipo_de_exceso, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec); //Falta agregar Hora del sistema
+                    printf("SUPERA LIMITE:  %d %s %s %d:%d:%d\n", (&ps_info)->pid, (&ps_info)->comm, tipo_de_exceso, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
                     
                     
                     write(file_desc, string_registro, sizeof(string_registro));
