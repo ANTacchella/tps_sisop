@@ -33,6 +33,8 @@ int reg_status;
 FILE *cmd;
 char *control_fifo = "./control_fifo";
 char *nombre_arch_registro = "registro.txt";
+FILE *reg_file;
+char *registro_file = "./registro.txt";
 
 void help(){
     printf("\n######    HELP Ejercicio_4    ######\n\n");
@@ -49,6 +51,13 @@ void help(){
 }
 
 void signalHandler(int sig){
+
+    mode_t theMode = S_IRWXU;
+    int returnValue = unlink(control_fifo);
+    if(returnValue==0){
+        printf("FIFO deleted.\n");
+    }
+
     //Aca deberiamos matar a los hijos.
     kill(pid_control,SIGTERM);
     kill(pid_registro,SIGTERM);
@@ -173,6 +182,18 @@ int main(int argc, char* argv[])
         {
             char ps_line[40];
             int file_desc;
+            
+            
+
+            reg_file = fopen(registro_file, "w+");
+            if (reg_file == NULL) {
+                printf("Error! No se pudo abrir el archivo de registro.\n");
+                exit(1);
+            }
+            fprintf(reg_file, "This is testing for fprintf...\n");
+            fputs("This is testing for fputs...\n", reg_file);
+            fclose(reg_file);
+
             //Codigo Hijo Registro
             while(1){
                 file_desc = open(control_fifo, O_RDONLY);
