@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <wait.h>
 #include <time.h>
+#include "hashmap.h"
 
 /*
 ejercicio_4.c | Trabajo Práctico 3) Ejercicio 4) | Primera Entrega
@@ -26,6 +27,13 @@ typedef struct ps_struct
     char comm[20];
 }ps_struct;
 
+typedef struct reg_struct
+{
+    int pid;
+    char desc[8];
+    char comm[20];
+}reg_struct;
+
 pid_t pid_control = -1; //Global
 pid_t pid_registro = -1; //Global
 int control_status;
@@ -35,6 +43,7 @@ char *control_fifo = "./control_fifo";
 char *nombre_arch_registro = "registro.txt";
 FILE *reg_file;
 char *registro_file = "./registro.txt";
+map_t hashmap;
 
 void help(){
     printf("\n######    HELP Ejercicio_4    ######\n\n");
@@ -57,8 +66,9 @@ void signalHandler(int sig){
     if(returnValue==0){
         printf("FIFO deleted.\n");
     }
-
-    //Aca deberiamos matar a los hijos.
+    hashmap_free(hashmap);
+    fclose(reg_file);
+    //Matamos a los hijos.
     kill(pid_control,SIGTERM);
     kill(pid_registro,SIGTERM);
     exit(EXIT_SUCCESS);
@@ -73,8 +83,22 @@ void char_to_ps_struct(const char *ps_line, ps_struct *ps_info){
     }
 }
 
+void char_to_reg_struct(const char *reg_line, reg_struct *reg_info){
+    int res;
+    res = sscanf(reg_line, "%d %[^;] %[^;]", &reg_info->pid, reg_info->desc, reg_info->comm);
+    if(res == EOF){
+        printf("¡ERROR! Sscanf failure: No se pudo leer el string del registro\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
 int main(int argc, char* argv[]) 
 {
+    /*Manda el proceso como demonio, el primer parámetro indica 
+    que quede ejecutando desde el directorio que fue ejecutado (nochdir=1),
+    el segundo que la salida por std se redireccione a /dev/null (noclose=0)*/
+    daemon(1,0);
+
     //Parametros Entrada:
     float limite_mem = 0.0; 
     float limite_cpu = 0.0; 
@@ -124,7 +148,7 @@ int main(int argc, char* argv[])
 
         char tipo_de_exceso[8];
         int cont = 0;
-        char string_registro[40];
+        char string_registro[25];
         time_t now;
         struct tm * timeinfo;
 
@@ -138,9 +162,7 @@ int main(int argc, char* argv[])
                 exit(EXIT_FAILURE);
             }
             while (fgets(ps_line, sizeof(ps_line), cmd) != NULL) {
-                //printf("%s\n", ps_line);
                 char_to_ps_struct(ps_line, &ps_info);
-                //printf("%d %f %f %s\n", (&ps_info)->pid, (&ps_info)->cpu, (&ps_info)->mem, (&ps_info)->comm);
 
                 //Controlo si exceden
                 if( (&ps_info)->cpu > limite_cpu ){
@@ -159,14 +181,13 @@ int main(int argc, char* argv[])
                     time(&now);
                     timeinfo = localtime (&now);
                    
-                    sprintf(string_registro,"%d %s %s %d:%d:%d", (&ps_info)->pid, (&ps_info)->comm, tipo_de_exceso, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec); //Falta agregar Hora del sistema
+                    sprintf(string_registro,"%d %s %s %0d:%0d:%0d", (&ps_info)->pid, strtok((&ps_info)->comm,"\n"), tipo_de_exceso, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec); //Falta agregar Hora del sistema
                     printf("SUPERA LIMITE:  %d %s %s %d:%d:%d\n", (&ps_info)->pid, (&ps_info)->comm, tipo_de_exceso, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
                     
                     
                     write(file_desc, string_registro, sizeof(string_registro));
 
                 }
-                //printf("NO SUPERA LIMITE:  %d %f %f %s\n", (&ps_info)->pid, (&ps_info)->cpu, (&ps_info)->mem, (&ps_info)->comm);
                 cont = 0;
                 *string_registro = '\0';
                 *tipo_de_exceso = '\0';
@@ -180,28 +201,30 @@ int main(int argc, char* argv[])
         pid_registro = fork(); //Creo a Registro
         if (pid_registro == 0)
         {
-            char ps_line[40];
+            char reg_line[25];
             int file_desc;
-            
-            
-
-            reg_file = fopen(registro_file, "w+");
-            if (reg_file == NULL) {
-                printf("Error! No se pudo abrir el archivo de registro.\n");
+            reg_struct reg_info;
+            hashmap = hashmap_new();
+            if (hashmap == NULL){
+                printf("¡Error! Memoria insuficiente.\n");
                 exit(1);
-            }
-            fprintf(reg_file, "This is testing for fprintf...\n");
-            fputs("This is testing for fputs...\n", reg_file);
-            fclose(reg_file);
-
+            }  
             //Codigo Hijo Registro
             while(1){
                 file_desc = open(control_fifo, O_RDONLY);
-                while(read(file_desc, ps_line, sizeof(ps_line))){
-                    printf("Registro: %s\n", ps_line);
-                    //parsear
+                reg_file = fopen(registro_file, "w+");
+                if (reg_file == NULL) {
+                    printf("¡Error! No se pudo abrir el archivo de registro.\n");
+                    exit(1);
+                }
+                while(read(file_desc, reg_line, sizeof(reg_line))){
+                    printf("Registro: %s\n", reg_line);
+                    char_to_reg_struct(reg_line, &reg_info);
+                    printf("Registro struct: %d %s %s\n", (&reg_info)->pid, (&reg_info)->desc, (&reg_info)->comm);
+                    fputs(reg_line, reg_file);
                 }
                 close(file_desc);
+                fclose(reg_file);
                 sleep(1);
             }
         }
@@ -209,6 +232,5 @@ int main(int argc, char* argv[])
     
     waitpid(pid_control, &control_status, 0);
     waitpid(pid_registro, &reg_status, 0);
-    //podriamos crear FIFO aca tambien
-    return 0; 
+    return EXIT_SUCCESS; 
 }
