@@ -4,3 +4,4 @@ JUAN|x2s1sa|A|1
 PEPE|x3sbsa|A|1
 ADRI|xaxqsa|D|2
 SOFI|abxdda|A|2
+admin|admin|D|0

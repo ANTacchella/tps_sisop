@@ -21,9 +21,6 @@ void text_to_user(const char *cad,t_usuario *user){
     strncpy(user->comicion,com,sizeof(user->comicion));
 }
 
-
-
-
 int Login_al_sistema(t_usuario *user){
 
     //Abro el archivo de usuarios en modo lectura de texto
@@ -42,13 +39,14 @@ int Login_al_sistema(t_usuario *user){
             text_to_user(buf,&aux);
             if(!strcmp(aux.usuario,user->usuario) && !strcmp(aux.clave,user->clave) ){
                 *user=aux;
+                fclose(fp);
                 return 1;                
             }
                      
         }
         titulo =0;
     }
-
+    fclose(fp);
     return 0;
 }
 
