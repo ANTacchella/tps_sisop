@@ -2,13 +2,9 @@
 #include <string.h> /* strcmp */
 #include <stdlib.h> 
 
-#define USUARIO "c"
-#define CLAVE "java"
-#define LONGITUD 80
-
 typedef struct{
-    char usuario[LONGITUD + 1];
-    char clave[LONGITUD + 1];
+    char usuario[80];
+    char clave[80];
     char rol[2];
     char comicion[6];
 }t_usuario;
