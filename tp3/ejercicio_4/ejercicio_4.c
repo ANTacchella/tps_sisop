@@ -41,7 +41,6 @@ FILE *cmd;
 char *control_fifo = "./control_fifo";
 char *nombre_arch_registro = "registro.txt";
 FILE *reg_file;
-char *registro_file = "./registro.txt";
 map_t hashmap;
 
 void help(){
@@ -53,8 +52,10 @@ void help(){
     printf("se lo registrara en un archivo: %s \n", nombre_arch_registro);
     printf("\n");
     printf("Para ejecutar el programa: \"./Ejercicio_4 X Y\",\n");
-    printf("donde X (limite de memoria) debe ser un float mayor o igual a cero.\n");
-    printf("donde y (limite de cpu) debe ser un float mayor o igual a cero.\n\n");
+    printf("donde X (limite de memoria) debe ser un float mayor a cero.\n");
+    printf("donde y (limite de cpu) debe ser un float mayor a cero.\n\n");
+    printf("El programa quedara ejecutando en segundo plano.\n");
+    printf("Para terminar el programa utilize la señal SIGUSR1.\n\n");
     
 }
 
@@ -62,9 +63,9 @@ void signalHandler(int sig){
 
     mode_t theMode = S_IRWXU;
     int returnValue = unlink(control_fifo);
-    if(returnValue==0){
+    /* if(returnValue==0){
         printf("FIFO deleted.\n");
-    }
+    } */
     hashmap_free(hashmap);
     fclose(reg_file);
     //Matamos a los hijos.
@@ -123,13 +124,13 @@ int main(int argc, char* argv[])
     if( strcmp("0", argv[1]) || strcmp("0.0", argv[1]) || strcmp("0", argv[2]) || strcmp("0.0", argv[2]) ){
 
         if(limite_mem <= 0 || limite_cpu <= 0){
-            printf ("\n¡ERROR!: Ingrese un float mayor o igual a cero.\n");
+            printf ("\n¡ERROR!: Ingrese un float mayor a cero.\n");
             printf ("%s\n", info);
             return EXIT_FAILURE;
         }
     }
 
-    reg_file = fopen(registro_file, "w+");
+    reg_file = fopen(nombre_arch_registro, "w+");
     if (reg_file == NULL) {
         printf("¡Error! No se pudo abrir el archivo de registro.\n");
         exit(1);
@@ -192,7 +193,7 @@ int main(int argc, char* argv[])
                     timeinfo = localtime (&now);
                    
                     sprintf(string_registro,"%d %s %s %0d:%0d:%0d", (&ps_info)->pid, strtok((&ps_info)->comm,"\n"), tipo_de_exceso, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec); //Falta agregar Hora del sistema
-                    printf("SUPERA LIMITE:  %d %s %s %d:%d:%d\n", (&ps_info)->pid, (&ps_info)->comm, tipo_de_exceso, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+                    //printf("SUPERA LIMITE:  %d %s %s %0d:%0d:%0d\n", (&ps_info)->pid, (&ps_info)->comm, tipo_de_exceso, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
                     
                     
                     write(file_desc, string_registro, sizeof(string_registro));
@@ -218,34 +219,43 @@ int main(int argc, char* argv[])
             while(1){
                 file_desc = open(control_fifo, O_RDONLY);
                 while(read(file_desc, reg_line, sizeof(reg_line))){
-                    printf("Registro: %s\n", reg_line);
+                    //printf("Registro: %s\n", reg_line);
                     char_to_reg_struct(reg_line, &reg_info);
-                    printf("Registro: %s\n", reg_line);
-                    printf("Registro struct: %d %s\n", (&reg_info)->pid, (&reg_info)->desc);
+                    //printf("Registro: %s\n", reg_line);
+                    //fprintf(reg_file, "Registro struct: %d %s\n", (&reg_info)->pid, (&reg_info)->desc);
                     int value = hashmap_get(hashmap, (&reg_info)->pid);
                     if (value == MAP_MISSING){
-                        if (strcmp("CPU", (&reg_info)->desc)){
-                            hashmap_put(hashmap, (&reg_info)->pid, 0);
+                        if (strcmp("CPU", (&reg_info)->desc) == 0){
+                            hashmap_put(hashmap, (&reg_info)->pid, 0);// 0 = cpu
                         }
-                        else if (strcmp("MEMORIA", (&reg_info)->desc)){
-                            hashmap_put(hashmap, (&reg_info)->pid, 1);
+                        else if (strcmp("MEMORIA", (&reg_info)->desc) == 0){
+                            hashmap_put(hashmap, (&reg_info)->pid, 1);// 1 = mem
                         }
                         else{
-                            hashmap_put(hashmap, (&reg_info)->pid, 2);
+                            hashmap_put(hashmap, (&reg_info)->pid, 2);// 2 = ambos
                         }
                         fprintf(reg_file, "%s\n", reg_line);
                     }
                     else{
-                        if (value == 0 &&  strcmp("MEMORIA", (&reg_info)->desc)){
+                        if (value == 0 && strcmp("MEMORIA", (&reg_info)->desc) == 0){
                             hashmap_put(hashmap, (&reg_info)->pid, 2);
                             fprintf(reg_file, "%s\n", reg_line);
                         }
-                        else if (value == 1 &&  strcmp("CPU", (&reg_info)->desc)){
+                        else if (value == 1 && strcmp("CPU", (&reg_info)->desc) == 0){
+                            hashmap_put(hashmap, (&reg_info)->pid, 2);
+                            fprintf(reg_file, "%s\n", reg_line);
+                        }
+                        else if (value == 0 && strcmp("AMBOS", (&reg_info)->desc) == 0){
+                            hashmap_put(hashmap, (&reg_info)->pid, 2);
+                            fprintf(reg_file, "%s\n", reg_line);
+                        }
+                        else if (value == 1 && strcmp("AMBOS", (&reg_info)->desc) == 0){
                             hashmap_put(hashmap, (&reg_info)->pid, 2);
                             fprintf(reg_file, "%s\n", reg_line);
                         }
                     }
                 }
+                fflush(reg_file);
                 close(file_desc);
                 sleep(1);
             }
