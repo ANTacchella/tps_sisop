@@ -31,7 +31,6 @@ typedef struct reg_struct
 {
     int pid;
     char desc[8];
-    char comm[20];
 }reg_struct;
 
 pid_t pid_control = -1; //Global
@@ -83,13 +82,13 @@ void char_to_ps_struct(const char *ps_line, ps_struct *ps_info){
     }
 }
 
-void char_to_reg_struct(const char *reg_line, reg_struct *reg_info){
+void char_to_reg_struct(char *reg_line, reg_struct *reg_info){
     int res;
-    res = sscanf(reg_line, "%d %[^;] %[^;]", &reg_info->pid, reg_info->desc, reg_info->comm);
-    if(res == EOF){
-        printf("¡ERROR! Sscanf failure: No se pudo leer el string del registro\n");
-        exit(EXIT_FAILURE);
-    }
+    char reg_line_cpy[40];
+    strcpy(reg_line_cpy, reg_line);
+    reg_info->pid = atoi(strtok(reg_line_cpy, " "));
+    strtok(NULL, " ");
+    strcpy(reg_info->desc, strtok(NULL, " "));
 }
 
 int main(int argc, char* argv[]) 
@@ -97,7 +96,7 @@ int main(int argc, char* argv[])
     /*Manda el proceso como demonio, el primer parámetro indica 
     que quede ejecutando desde el directorio que fue ejecutado (nochdir=1),
     el segundo que la salida por std se redireccione a /dev/null (noclose=0)*/
-    daemon(1,0);
+    daemon(1,1);
 
     //Parametros Entrada:
     float limite_mem = 0.0; 
@@ -130,6 +129,17 @@ int main(int argc, char* argv[])
         }
     }
 
+    reg_file = fopen(registro_file, "w+");
+    if (reg_file == NULL) {
+        printf("¡Error! No se pudo abrir el archivo de registro.\n");
+        exit(1);
+    }
+    hashmap = hashmap_new();
+    if (hashmap == NULL){
+        printf("¡Error! Memoria insuficiente.\n");
+        exit(1);
+    }
+
     //signal handler SIGUSR1
     signal(SIGUSR1, &signalHandler);
     mkfifo(control_fifo, 0666);
@@ -148,7 +158,7 @@ int main(int argc, char* argv[])
 
         char tipo_de_exceso[8];
         int cont = 0;
-        char string_registro[25];
+        char string_registro[40];
         time_t now;
         struct tm * timeinfo;
 
@@ -201,30 +211,42 @@ int main(int argc, char* argv[])
         pid_registro = fork(); //Creo a Registro
         if (pid_registro == 0)
         {
-            char reg_line[25];
+            char reg_line[40];
             int file_desc;
-            reg_struct reg_info;
-            hashmap = hashmap_new();
-            if (hashmap == NULL){
-                printf("¡Error! Memoria insuficiente.\n");
-                exit(1);
-            }  
+            reg_struct reg_info;  
             //Codigo Hijo Registro
             while(1){
                 file_desc = open(control_fifo, O_RDONLY);
-                reg_file = fopen(registro_file, "w+");
-                if (reg_file == NULL) {
-                    printf("¡Error! No se pudo abrir el archivo de registro.\n");
-                    exit(1);
-                }
                 while(read(file_desc, reg_line, sizeof(reg_line))){
                     printf("Registro: %s\n", reg_line);
                     char_to_reg_struct(reg_line, &reg_info);
-                    printf("Registro struct: %d %s %s\n", (&reg_info)->pid, (&reg_info)->desc, (&reg_info)->comm);
-                    fputs(reg_line, reg_file);
+                    printf("Registro: %s\n", reg_line);
+                    printf("Registro struct: %d %s\n", (&reg_info)->pid, (&reg_info)->desc);
+                    int value = hashmap_get(hashmap, (&reg_info)->pid);
+                    if (value == MAP_MISSING){
+                        if (strcmp("CPU", (&reg_info)->desc)){
+                            hashmap_put(hashmap, (&reg_info)->pid, 0);
+                        }
+                        else if (strcmp("MEMORIA", (&reg_info)->desc)){
+                            hashmap_put(hashmap, (&reg_info)->pid, 1);
+                        }
+                        else{
+                            hashmap_put(hashmap, (&reg_info)->pid, 2);
+                        }
+                        fprintf(reg_file, "%s\n", reg_line);
+                    }
+                    else{
+                        if (value == 0 &&  strcmp("MEMORIA", (&reg_info)->desc)){
+                            hashmap_put(hashmap, (&reg_info)->pid, 2);
+                            fprintf(reg_file, "%s\n", reg_line);
+                        }
+                        else if (value == 1 &&  strcmp("CPU", (&reg_info)->desc)){
+                            hashmap_put(hashmap, (&reg_info)->pid, 2);
+                            fprintf(reg_file, "%s\n", reg_line);
+                        }
+                    }
                 }
                 close(file_desc);
-                fclose(reg_file);
                 sleep(1);
             }
         }
