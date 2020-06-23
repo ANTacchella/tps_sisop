@@ -57,46 +57,59 @@ foreach($item in $archivo){
 
             $alu_materia[$clave] = $clave
             
-            $p1 = $item.PrimerParcial
-            $p2 = $item.SegundoParcial
-            $recu = $item.RecuParcial
-            $nRecu = $item.RecuNota
-            $final = $item.Final
+            [float]$p1 =  [float]$item.PrimerParcial
+            [float]$p2 =  [float]$item.SegundoParcial
+            [float]$recu =  [float]$item.RecuParcial
+            [float]$nRecu =  [float]$item.RecuNota
+            [float]$final =  [float]$item.Final
 
             #punto 1
-            if( ((4 -le $p1 -and $p1 -le 6 -and $recu -ne "1" ) -or ($recu -eq "1" -and 4 -le $nRecu -and $nRecu -le 6) -or ($recu -eq "1" -and 6 -lt $nRecu -and  4 -le $p2 -and $p2 -le 6)) -and (( 4 -le $p2 -and $p2 -le  6 -and $recu -ne "2") -or ($recu -eq "2" -and 4 -le $nRecu -and $nRecu -le 6) -or ($recu -eq "2" -and 6 -lt $nRecu -and 4 -le $p1 -and $p1 -le 6)) -and $final -eq ""  ){
+            if( ((4 -le $p1 -and $p1 -le 6 -and $recu -ne "1" ) -or ($recu -eq "1" -and 4 -le $nRecu -and $nRecu -le 6) -or ($recu -eq "1" -and 6 -lt $nRecu -and  4 -le $p2 -and $p2 -le 6)) -and (( 4 -le $p2 -and $p2 -le 6 -and $recu -ne "2") -or ($recu -eq "2" -and 4 -le $nRecu -and $nRecu -le 6) -or ($recu -eq "2" -and 6 -lt $nRecu -and 4 -le $p1 -and $p1 -le 6)) -and $final -eq ""  ){
                 $punto1[$idMateria]+=1
                
             }
             else{
+                [float]$aux1 = $p1;
+                [float]$aux2 = $p2;
+                if($recu -eq "1"){
+                      $aux1 = $nRecu;
+                }
+                if($recu -eq "2"){
+                    $aux2 = $nRecu;
+                }
+                #si tengo una nota entre 4 y 6, y la otra mayor o igual a 7 voy a final
+                if( ($final -eq "" -or $final -eq 0) -and ( $aux1 -ne "" -and $aux2 -ne "") -and ( ( 4 -le $aux1 -and $aux1 -le 6 -and 7 -le $aux2) -or ( 4 -le $aux2 -and $aux2 -le 6 -and  7 -le $aux1) )){
+                    $punto1[$idMateria]+=1;
+                }
+                else{
                 #punto 2
-                if( ($final  -lt 4 -and  $final  -ne  "") -or (($p1  -lt  4 -and $recu  -ne  "1" ) -or ($recu -eq "1" -and $nRecu  -lt  4 )) -and (($p2  -lt  4 -and $recu  -ne  "2" ) -or ($recu -eq "2" -and $nRecu  -lt  4 )) ){
-                    $punto2[$idMateria]+=1
-                
-                }else{
-                    #punto 3
-                    if($nRecu -eq "" -and ( ($p1 -lt 7 -and $p1 -ne "" ) -or ($p2 -lt 7 -and $p2 -ne "") ) ){
-                        $punto3[$idMateria]+=1
-            
-                    }
-                    else{
-                        #punto 4
-                        if( ($p1 -eq "" -and $recu -eq "1" -and $nRecu -eq "") -or ($p1 -eq "" -and $recu -ne "1") -or ($p2 -eq "" -and $recu -eq "2" -and $nRecu -eq "") -or ($p2 -eq "" -and $recu -ne 2) ){
-                            $punto4[$idMateria]+=1
+                    if( ($final -lt 4 -and ($final -ne "" || $final -ne 0 )) -or (( ( $aux1 -ne "" -and $aux2 -ne "" ) -or ($aux1 -ne 0 -and $aux2 -ne 0) ) -and  ($aux1 -lt 4 -or $aux2 -lt 4) ) ){
+                      $punto2[$idMateria]+=1;
                         
+                    }else{
+                        #punto 3
+                        if($nRecu -eq "" -and ( ($p1 -lt 7 -and $p1 -ne "" -and $p2 -ne "") -or ($p2 -lt 7 -and $p2 -ne "" -and $p1 -ne "") ) ){
+                            $punto3[$idMateria]+=1;
+                
+                        }
+                        else{
+                            #punto 4
+                            if( ($p1 -eq "" -and $recu -eq "1" -and $nRecu -eq "") -or ($p1 -eq "" -and $recu -ne "1") -or ($p2 -eq "" -and $recu -eq "2" -and $nRecu -eq "") -or ($p2 -eq "" -and $recu -ne 2) ){
+                                $punto4[$idMateria]+=1;
+                            
+                            }
+
                         }
 
                     }
-
                 }
-
             }
             
         }
     }
     else{
         if(!$item.Equals("")){
-            $bandera=1
+            $bandera=1;
         }
     }
  
@@ -127,6 +140,9 @@ $salida | export-csv -Path .\res_materias.txt -NoTypeInformation
     Este script recibe un archivo de notas de alumnos y lo analiza para indicar por cada materia, cuantos alumnos recursan,cuantos pueden recuperar, cuantos tienen que ir a final y cuantos abandonaron.
 .Description
     El script ejercicio_5.ps1 recibe como parámetros el archivo de alumnos para analizar, la primera linea del archivo no se toma encuenta porque se supone que son los titulos de cada columna.
+    Aclaracións:
+        -Un alumno puede cumplir con una sola condicion como maximo.
+        -Para Recursar  hay que tener ambos parciales con notas menores a 4, el recuperatorio tiene prioridad sobre el primer parcial.
 .Example
     ./ejercicio_5.ps1 -Nomina ./alumnos.csv o ./alumnos.txt
 .Notes

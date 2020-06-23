@@ -13,7 +13,7 @@ info="Para más información ejecute $0 -h o $0 --help"
 Help(){
     echo "######    HELP $0     ######"
     echo -e "\nEste script se encargará de procesar los datos proporcionados por la universidad y devolver un resumen de resultados por materia."
-    echo -e "Aclaración:\n-Si un mismo alumno cumple las condiciones puede tener más de un estado para la misma materia.\n"
+    echo -e "Aclaración:\n-Un alumno puede cumplir con una sola condicion como maximo.\n-Para Recursar  hay que tener ambos parciales con notas menores a 4, el recuperatorio tiene prioridad sobre el primer parcial.\n "
     echo -e "\nEl script recibe un único parámetro:\n-f 'path': ruta del archivo de entrada ya sea de manera relativa o absoluta"
 }
 
@@ -85,22 +85,37 @@ awk -F"|" 'BEGIN{bandera=1}
                 punto1[$2]++;
             }
             else{
-                #punto 2
-                if( ($7 <4 &&  $7 != "") || (($3 < 4 && $5 != "1" ) || ($5=="1" && $6 < 4 )) && (($4 < 4 && $5 != "2" ) || ($5=="2" && $6 < 4 )) ){
-                    punto2[$2]++;
+                aux1 = $3;
+                aux2 = $4;
+                if($5=="1")
+                    aux1 = $6;
+                if($5=="2")
+                    aux2 = $6;
+                #si tengo una nota entre 4 y 6, y la otra mayor a 6 voy a final
+                
+                if( $7=="" && ( aux1!= "" && aux2!="") && ( (aux1>=4 && aux1<=6 && aux2>=7) || (aux2>=4 && aux2<=6 && aux1>=7) )){
+                    punto1[$2]++;
                 }
                 else{
-                    #punto 3
-                    if($6=="" && ( ($3<7 && $3!="" ) || ($4<7 && $4!="") ) ){
-                        punto3[$2]++;
+                    #punto 2
+                      if( ($7 < 4 && ($7 != "" )) || ((  aux1 != "" && aux2 != "" ) &&  (aux1 < 4 || aux2 < 4) ) ){
+                        punto2[$2]++;
                     }
                     else{
-                        #punto 4
-                        if( ($3=="" && $5=="1" && $6=="") || ($3=="" && $5!="1") || ($4=="" && $5=="2" && $6=="") || ($4=="" && $5!=2) ){
-                            punto4[$2]++;
+                        #punto 3
+                        if($6=="" && ( ($3<7 && $3!="" && $4!="" ) || ($4<7 && $3!="" && $4!="") ) ){
+                            punto3[$2]++;
+                        }
+                        else{
+                            #punto 4
+                            if( ($3=="" && $5=="1" && $6=="") || ($3=="" && $5!="1") || ($4=="" && $5=="2" && $6=="") || ($4=="" && $5!=2) ){
+                                punto4[$2]++;
+                            }
+
                         }
 
                     }
+
 
                 }
 
