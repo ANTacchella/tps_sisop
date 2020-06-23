@@ -69,34 +69,47 @@ foreach($item in $archivo){
                
             }
             else{
+                [float]$aux1 = $p1;
+                [float]$aux2 = $p2;
+                if($recu -eq "1"){
+                      $aux1 = $nRecu;
+                }
+                if($recu -eq "2"){
+                    $aux2 = $nRecu;
+                }
+                #si tengo una nota entre 4 y 6, y la otra mayor o igual a 7 voy a final
+                if( ( $aux1 -ne "" -and $aux2 -ne "") -and ( ( 4 -le $aux1 -and $aux1 -le 6 -and 7 -le $aux2) -or ( 4 -le $aux2 -and $aux2 -le 6 -and  7 -le $aux1) )){
+                    $punto1[$idMateria]+=1;
+                }
+                else{
                 #punto 2
-                if( ($final -lt 4 -and $final -ne "") -or ( (($p1 -lt 4 -and $recu -ne "1" ) -or ($recu -eq "1" -and $nRecu -lt 4 )) -and (($p2 -lt 4 -and $recu -ne "2" ) -or ($recu -eq "2" -and $nRecu  -lt 4 )) )){
-                    $punto2[$idMateria]+=1
-                    
-                }else{
-                    #punto 3
-                    if($nRecu -eq "" -and ( ($p1 -lt 7 -and $p1 -ne "" ) -or ($p2 -lt 7 -and $p2 -ne "") ) ){
-                        $punto3[$idMateria]+=1
-            
-                    }
-                    else{
-                        #punto 4
-                        if( ($p1 -eq "" -and $recu -eq "1" -and $nRecu -eq "") -or ($p1 -eq "" -and $recu -ne "1") -or ($p2 -eq "" -and $recu -eq "2" -and $nRecu -eq "") -or ($p2 -eq "" -and $recu -ne 2) ){
-                            $punto4[$idMateria]+=1
+                    if( ($final -lt 4 -and ($final -ne "" || $final -ne 0 )) -or (( $aux1 -ne "" -and $aux2 -ne "") -and  ($aux1 -lt 4 -or $aux2 -lt 4) ) ){
+                      $punto2[$idMateria]+=1;
                         
+                    }else{
+                        #punto 3
+                        if($nRecu -eq "" -and ( ($p1 -lt 7 -and $p1 -ne "" ) -or ($p2 -lt 7 -and $p2 -ne "") ) ){
+                            $punto3[$idMateria]+=1;
+                
+                        }
+                        else{
+                            #punto 4
+                            if( ($p1 -eq "" -and $recu -eq "1" -and $nRecu -eq "") -or ($p1 -eq "" -and $recu -ne "1") -or ($p2 -eq "" -and $recu -eq "2" -and $nRecu -eq "") -or ($p2 -eq "" -and $recu -ne 2) ){
+                                $punto4[$idMateria]+=1;
+                            
+                            }
+
                         }
 
                     }
-
                 }
-
             }
             
         }
     }
     else{
         if(!$item.Equals("")){
-            $bandera=1
+            $bandera=1;
         }
     }
  
