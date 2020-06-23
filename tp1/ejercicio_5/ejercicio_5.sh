@@ -93,7 +93,7 @@ awk -F"|" 'BEGIN{bandera=1}
                     aux2 = $6;
                 #si tengo una nota entre 4 y 6, y la otra mayor a 6 voy a final
                 
-                if( ( aux1!= "" && aux2!="") && ( (aux1>=4 && aux1<=6 && aux2>=7) || (aux2>=4 && aux2<=6 && aux1>=7) )){
+                if( $7=="" && ( aux1!= "" && aux2!="") && ( (aux1>=4 && aux1<=6 && aux2>=7) || (aux2>=4 && aux2<=6 && aux1>=7) )){
                     punto1[$2]++;
                 }
                 else{

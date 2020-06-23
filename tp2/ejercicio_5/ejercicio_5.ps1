@@ -78,7 +78,7 @@ foreach($item in $archivo){
                     $aux2 = $nRecu;
                 }
                 #si tengo una nota entre 4 y 6, y la otra mayor o igual a 7 voy a final
-                if( ( $aux1 -ne "" -and $aux2 -ne "") -and ( ( 4 -le $aux1 -and $aux1 -le 6 -and 7 -le $aux2) -or ( 4 -le $aux2 -and $aux2 -le 6 -and  7 -le $aux1) )){
+                if( ($final -eq "" -or $final -eq 0) -and ( $aux1 -ne "" -and $aux2 -ne "") -and ( ( 4 -le $aux1 -and $aux1 -le 6 -and 7 -le $aux2) -or ( 4 -le $aux2 -and $aux2 -le 6 -and  7 -le $aux1) )){
                     $punto1[$idMateria]+=1;
                 }
                 else{
