@@ -83,12 +83,12 @@ foreach($item in $archivo){
                 }
                 else{
                 #punto 2
-                    if( ($final -lt 4 -and ($final -ne "" || $final -ne 0 )) -or (( $aux1 -ne "" -and $aux2 -ne "") -and  ($aux1 -lt 4 -or $aux2 -lt 4) ) ){
+                    if( ($final -lt 4 -and ($final -ne "" || $final -ne 0 )) -or (( ( $aux1 -ne "" -and $aux2 -ne "" ) -or ($aux1 -ne 0 -and $aux2 -ne 0) ) -and  ($aux1 -lt 4 -or $aux2 -lt 4) ) ){
                       $punto2[$idMateria]+=1;
                         
                     }else{
                         #punto 3
-                        if($nRecu -eq "" -and ( ($p1 -lt 7 -and $p1 -ne "" ) -or ($p2 -lt 7 -and $p2 -ne "") ) ){
+                        if($nRecu -eq "" -and ( ($p1 -lt 7 -and $p1 -ne "" -and $p2 -ne "") -or ($p2 -lt 7 -and $p2 -ne "" -and $p1 -ne "") ) ){
                             $punto3[$idMateria]+=1;
                 
                         }

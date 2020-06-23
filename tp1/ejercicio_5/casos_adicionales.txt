@@ -1,8 +1,0 @@
-DNI|IdMateria|PrimerParcial|SegundoParcial|RecuParcial|RecuNota|Final
-8|4|2|5|||
-11|15|3|2|||
-3|8|9|6|||
-7|15|4|5|||
-8|15|7||1|7|
-6|8|3|5|1|4|
-4|15|7|6|2|3|
