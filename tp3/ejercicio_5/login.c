@@ -1,41 +1,42 @@
 #include <stdio.h>
-#include <string.h> /* strcmp */
-#include <stdlib.h> 
+#include <string.h>
+#include <stdlib.h>
 
 typedef struct{
-    char usuario[80];
-    char clave[80];
+    char usuario[40];
+    char clave[20];
     char rol[2];
-    char comicion[6];
+    char com[6];
 }t_usuario;
 
 //Función que parsea los datos de un string a un t_usuario
-void text_to_user(const char *cad,t_usuario *user){
-    char usr[80],clv[80],rol[2],com[6];
+void text_to_user(const char *cad, t_usuario *user){
+    char usr[40],clv[20],rol[2],com[6];
     int c;
     c = sscanf(cad,"%[^|]|%[^|]|%[^|]|%[^\n]",usr,clv,rol,com);
 
     strncpy(user->usuario,usr,sizeof(user->usuario));
     strncpy(user->clave,clv,sizeof(user->clave));
     strncpy(user->rol,rol,sizeof(user->rol));
-    strncpy(user->comicion,com,sizeof(user->comicion));
+    strncpy(user->com,com,sizeof(user->com));
 }
 
-int Login_al_sistema(t_usuario *user){
+int login_al_sistema(t_usuario *user){
 
     //Abro el archivo de usuarios en modo lectura de texto
     FILE *fp = fopen("usuarios.txt","rt");
     if(fp == NULL){
-        perror("\nError al abrir el archivo de pagos!!\n");
+        printf("\n¡Error al abrir el archivo usuarios!\n");
         exit(1);
     }
         
     char buf[200];
     t_usuario aux;
-    int titulo = 1;
+    int encabezado = 1;
 
     while(fgets(buf,sizeof(buf),fp) != NULL)
-    {   if(!titulo){
+    {   
+        if(!encabezado){
             text_to_user(buf,&aux);
             if(!strcmp(aux.usuario,user->usuario) && !strcmp(aux.clave,user->clave) ){
                 *user=aux;
@@ -44,14 +45,14 @@ int Login_al_sistema(t_usuario *user){
             }
                      
         }
-        titulo =0;
+        encabezado = 0;
     }
     fclose(fp);
     return 0;
 }
 
 
-int main() {
+/* int main() {
 
     t_usuario user;
     int intento = 0;
@@ -73,7 +74,7 @@ int main() {
         scanf("%s",user.clave);
         fflush(stdin);
         
-        ingresa=Login_al_sistema(&user);
+        ingresa=login_al_sistema(&user);
         intento++;
 
     } while (intento < 3 && ingresa == 0);
@@ -87,4 +88,4 @@ int main() {
     }
 
     return 0;
-}
+} */
