@@ -247,6 +247,18 @@ int get_incorrect_asists(const t_soc *socios,int cant_soc,const t_asis *asist,in
  
 }
 
+void borrar_shm(){
+    //Elimino los objetos de memoria compartida
+        if(remove("/dev/shm/shmPagos") != 0){
+            perror("\nError al borrar el objeto de memoria compartida!\n");
+            exit(EXIT_FAILURE);
+        }
+            if(remove("/dev/shm/shmAsist") != 0){
+            perror("\nError al borrar el objeto de memoria compartida!\n");
+            exit(EXIT_FAILURE);
+        }
+}
+
 void help(){
     printf("\n######    HELP Ejercicio_3    ######\n");
     printf("\n\nEste programa recibe por parámetro un directorio, en el cual se\n");
@@ -321,34 +333,36 @@ int main(int argc, char* argv[]){
 
                 //Calculo la cantidad de registros en el archivo de pagos
                 int cant_reg = contar_registros_archivo(path_pagos);
+                char buf[200];
 
                 if(cant_reg == -1){
-                    printf("\nError al abrir el archivo de pagos!!\n");
-                    exit(1);
-                }
+                    cant_reg = 0;
 
-                char buf[200];
-                
-                //Abro el archivo de pagos en modo lectura de texto
-                FILE *fp = fopen(path_pagos,"rt");
-                if(fp == NULL){
-                    perror("\nError al abrir el archivo de pagos!!\n");
-                    exit(1);
+                    t_pago pagos[0];
                 }
 
                 //Creo un array de t_pago con espacio para todos los registros del archivo
                 t_pago pagos[cant_reg];
 
-                //Leo todo el archivo de pagos y cargo los datos en el array de t_pago
-                int j = 0;
-                while(fgets(buf,sizeof(buf),fp) != NULL)
-                {
-                    text_to_pago(buf,&pagos[j]);
-                    j++;
-                }
+                if(cant_reg != 0){
+                    //Abro el archivo de pagos en modo lectura de texto
+                    FILE *fp = fopen(path_pagos,"rt");
+                    if(fp == NULL){
+                        perror("\nError al abrir el archivo de pagos!!\n");
+                        exit(1);
+                    }
 
-                //Cierro el archivo de pagos
-                fclose(fp);
+                    //Leo todo el archivo de pagos y cargo los datos en el array de t_pago
+                    int j = 0;
+                    while(fgets(buf,sizeof(buf),fp) != NULL)
+                    {
+                        text_to_pago(buf,&pagos[j]);
+                        j++;
+                    }
+
+                    //Cierro el archivo de pagos
+                    fclose(fp);
+                }
 
                 //****TRABAJO CON MEMORIA COMPARTIDA****
 
@@ -405,32 +419,33 @@ int main(int argc, char* argv[]){
                 int cant_reg = contar_registros_archivo(path_asist);
 
                 if(cant_reg == -1){
-                    printf("\nError al abrir el archivo de asistencias!!\n");
-                    exit(1);
+                    cant_reg = 0;
                 }
 
-                //Abro el archivo de asistencias en modo lectura de texto
-                FILE *fp = fopen(path_asist,"rt");
-                if(fp == NULL){
-                    perror("\nError al abrir el archivo de asistencias!!\n");
-                    exit(1);
+                    //Creo un array de t_asis con espacio para todos los registros del archivo
+                    t_asis asists[cant_reg];
+
+                if(cant_reg != 0){
+                    //Abro el archivo de asistencias en modo lectura de texto
+                    FILE *fp = fopen(path_asist,"rt");
+                    if(fp == NULL){
+                        perror("\nError al abrir el archivo de asistencias!!\n");
+                        exit(1);
+                    }
+
+                    char buf[200];
+
+                    //Leo todo el archivo de asistencias y cargo los datos en el array de t_asis
+                    int j = 0;
+                    while(fgets(buf,sizeof(buf),fp) != NULL)
+                    {
+                        text_to_asist(buf,&asists[j]);
+                        j++;
+                    }
+
+                    //Cierro el archivo de asistencias
+                    fclose(fp);
                 }
-
-                char buf[200];
-
-                //Creo un array de t_asis con espacio para todos los registros del archivo
-                t_asis asists[cant_reg];
-
-                //Leo todo el archivo de asistencias y cargo los datos en el array de t_asis
-                int j = 0;
-                while(fgets(buf,sizeof(buf),fp) != NULL)
-                {
-                    text_to_asist(buf,&asists[j]);
-                    j++;
-                }
-
-                //Cierro el archivo de asistencias
-                fclose(fp);
 
                 //****TRABAJO CON MEMORIA COMPARTIDA****
 
@@ -483,6 +498,41 @@ int main(int argc, char* argv[]){
                 int cant_soc,cant_asist,cant_pagos,reg_size;
 
                 char buf[200];
+
+
+                //****LECTURA ARCHIVO DE SOCIOS****
+
+                //Calculo la cantidad de registros en el archivo de socios
+                cant_soc = contar_registros_archivo(path_soc);
+                if(cant_soc == -1){
+                    printf("\nError al abrir el archivo de socios!!\n");
+                    exit(1);
+                }
+                else if(cant_soc == 0){
+                    printf("\nEl archivo de socios está VACIO!!\n");
+                    exit(1);
+                }
+
+                //Abro el archivo de socios en modo lectura de texto
+                FILE *fp = fopen(path_soc,"rt");
+                if(fp == NULL){
+                    printf("\nError al abrir el archivo de socios!!\n");
+                    exit(1);
+                }
+
+                //Creo un array de t_soc con espacio para todos los registros del archivo
+                t_soc socios[cant_soc];
+
+                //Leo todo el archivo de socios y cargo los datos en el array de t_soc
+                int j = 0;
+                while(fgets(buf,sizeof(buf),fp) != NULL)
+                {
+                    text_to_soc(buf,&socios[j]);
+                    j++;
+                }
+
+                //Cierro el archivo de socios
+                fclose(fp);
 
                 //****TRABAJO CON MEMORIA COMPARTIDA DE PAGOS****
 
@@ -577,40 +627,9 @@ int main(int argc, char* argv[]){
 
                 //Elimino el semáforo de asistencias
                 sem_unlink(SEM_ASIST);
-                
-                //****LECTURA ARCHIVO DE SOCIOS****
 
-                //Calculo la cantidad de registros en el archivo de socios
-                cant_soc = contar_registros_archivo(path_soc);
-                if(cant_soc == -1){
-                    printf("\nError al abrir el archivo de socios!!\n");
-                    exit(1);
-                }
-                else if(cant_soc == 0){
-                    printf("\nEl archivo de socios está VACIO!!\n");
-                    exit(1);
-                }
-
-                //Abro el archivo de socios en modo lectura de texto
-                FILE *fp = fopen(path_soc,"rt");
-                if(fp == NULL){
-                    printf("\nError al abrir el archivo de socios!!\n");
-                    exit(1);
-                }
-
-                //Creo un array de t_soc con espacio para todos los registros del archivo
-                t_soc socios[cant_soc];
-
-                //Leo todo el archivo de socios y cargo los datos en el array de t_soc
-                int j = 0;
-                while(fgets(buf,sizeof(buf),fp) != NULL)
-                {
-                    text_to_soc(buf,&socios[j]);
-                    j++;
-                }
-
-                //Cierro el archivo de socios
-                fclose(fp);
+                //Elimino los objetos de memoria compartida
+                borrar_shm();
 
                 //****CÁLCULO LOS REQUISITOS DEL PROGRAMA****
 
