@@ -1,0 +1,8 @@
+NOMBRE|CONTRASEÑA|ROL|COD_COMISION
+Tomas|12345|A|1
+Ramiro|85342|D|1
+Alejandro|51364|A|1
+Maximiliano|71256|A|2
+Fernando|93254|D|2
+Joela|34fs1|A|2
+Nicolas|fh85s|A|2
