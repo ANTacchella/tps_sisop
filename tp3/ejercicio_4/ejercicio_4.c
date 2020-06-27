@@ -33,14 +33,17 @@ typedef struct reg_struct
     char desc[8];
 }reg_struct;
 
-pid_t pid_control = -1; //Global
-pid_t pid_registro = -1; //Global
+// Variables globales
+pid_t pid_control = -1;
+pid_t pid_registro = -1;
 int control_status;
 int reg_status;
 FILE *cmd;
-char *control_fifo = "./control_fifo";
-char *nombre_arch_registro = "registro.txt";
+char *control_fifo = "/tmp/control_fifo";
+char *nombre_arch_registro = "./registro.txt";
+char *nombre_arch_log = "./ejercicio_4.log";
 FILE *reg_file;
+FILE *log_file;
 map_t hashmap;
 
 void help(){
@@ -55,19 +58,26 @@ void help(){
     printf("donde X (limite de memoria) debe ser un float mayor a cero.\n");
     printf("donde y (limite de cpu) debe ser un float mayor a cero.\n\n");
     printf("El programa quedara ejecutando en segundo plano.\n");
-    printf("Para terminar el programa utilize la señal SIGUSR1.\n\n");
-    
+    printf("Los errores encontrados durante la ejecución serán registrados en un archivo ejercicio_4.log.\n");
+    printf("Para terminar el programa utilize la señal SIGUSR1.\n");
 }
 
 void signalHandler(int sig){
 
     mode_t theMode = S_IRWXU;
-    int returnValue = unlink(control_fifo);
-    /* if(returnValue==0){
-        printf("FIFO deleted.\n");
-    } */
+    if(unlink(control_fifo) != 0){
+        fprintf(log_file, "¡ERROR! No se pudo borrar el archivo FIFO.\n");
+        exit(EXIT_FAILURE);
+    }
     hashmap_free(hashmap);
-    fclose(reg_file);
+    if(fclose(reg_file) != 0){
+        fprintf(log_file, "¡ERROR! No se pudo cerrar el archivo de registro.\n");
+        exit(EXIT_FAILURE);
+    }
+    if (fclose(log_file) != 0) {
+        fprintf(stderr, "¡Error! No se pudo cerrar el archivo de log.\n");
+        exit(EXIT_FAILURE);
+    }
     //Matamos a los hijos.
     kill(pid_control,SIGTERM);
     kill(pid_registro,SIGTERM);
@@ -78,7 +88,7 @@ void char_to_ps_struct(const char *ps_line, ps_struct *ps_info){
     int res;
     res = sscanf(ps_line, "%d %f %f %[^;]", &ps_info->pid, &ps_info->cpu, &ps_info->mem, ps_info->comm);
     if(res == EOF){
-        printf("¡ERROR! Sscanf failure: No se pudo leer el string del proceso\n");
+        fprintf(log_file, "¡ERROR! Sscanf failure: No se pudo leer el string del proceso\n");
         exit(EXIT_FAILURE);
     }
 }
@@ -130,20 +140,28 @@ int main(int argc, char* argv[])
         }
     }
 
+    log_file = fopen(nombre_arch_log, "w+");
+    if (log_file == NULL) {
+        fprintf(stderr, "¡Error! No se pudo abrir el archivo de log.\n");
+        return EXIT_FAILURE;
+    }
     reg_file = fopen(nombre_arch_registro, "w+");
     if (reg_file == NULL) {
-        printf("¡Error! No se pudo abrir el archivo de registro.\n");
-        exit(1);
+        fprintf(log_file, "¡Error! No se pudo abrir el archivo de registro.\n");
+        return EXIT_FAILURE;
     }
     hashmap = hashmap_new();
     if (hashmap == NULL){
-        printf("¡Error! Memoria insuficiente.\n");
-        exit(1);
+        fprintf(log_file, "¡Error! Memoria insuficiente.\n");
+        return EXIT_FAILURE;
     }
 
     //signal handler SIGUSR1
     signal(SIGUSR1, &signalHandler);
-    mkfifo(control_fifo, 0666);
+    if (mkfifo(control_fifo, 0666) != 0){
+        fprintf(log_file, "¡Error! No se pudo crear el archivo FIFO.\n");
+        return EXIT_FAILURE;
+    }
     //crear hijos y dejarlos en segundo plano
     pid_control = fork(); //Creo a Control
     if (pid_control == 0)
@@ -169,7 +187,7 @@ int main(int argc, char* argv[])
             sprintf(ps, "ps --no-headers -Ao pid,%%cpu,%%mem,comm");
             cmd = popen(ps, "r");
             if (cmd == NULL) {
-                printf("¡ERROR! Popen failure: No se pudo leer la salida de ps\n");
+                fprintf(log_file, "¡ERROR! Popen failure: No se pudo leer la salida de ps\n");
                 exit(EXIT_FAILURE);
             }
             while (fgets(ps_line, sizeof(ps_line), cmd) != NULL) {
@@ -193,9 +211,7 @@ int main(int argc, char* argv[])
                     timeinfo = localtime (&now);
                    
                     sprintf(string_registro,"%d %s %s %0d:%0d:%0d", (&ps_info)->pid, strtok((&ps_info)->comm,"\n"), tipo_de_exceso, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec); //Falta agregar Hora del sistema
-                    //printf("SUPERA LIMITE:  %d %s %s %0d:%0d:%0d\n", (&ps_info)->pid, (&ps_info)->comm, tipo_de_exceso, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-                    
-                    
+                             
                     write(file_desc, string_registro, sizeof(string_registro));
 
                 }
@@ -219,10 +235,7 @@ int main(int argc, char* argv[])
             while(1){
                 file_desc = open(control_fifo, O_RDONLY);
                 while(read(file_desc, reg_line, sizeof(reg_line))){
-                    //printf("Registro: %s\n", reg_line);
                     char_to_reg_struct(reg_line, &reg_info);
-                    //printf("Registro: %s\n", reg_line);
-                    //fprintf(reg_file, "Registro struct: %d %s\n", (&reg_info)->pid, (&reg_info)->desc);
                     int value = hashmap_get(hashmap, (&reg_info)->pid);
                     if (value == MAP_MISSING){
                         if (strcmp("CPU", (&reg_info)->desc) == 0){

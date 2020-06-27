@@ -10,4 +10,4 @@ hashmap.o: hashmap.c
 	@gcc -c hashmap.c
 
 clean: 
-	@rm -f *.o
+	rm -f *.o

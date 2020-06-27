@@ -186,13 +186,3 @@ void hashmap_free(map_t in){
     free(m->data);
     free(m);
 }
-
-/* int main(){
-    map_t hashmap;
-    int result;
-    hashmap = hashmap_new();
-    hashmap_put(hashmap, 5, 8);
-    result = hashmap_get(hashmap, 5);
-    printf("%d\n", result);
-    return 0;
-} */
