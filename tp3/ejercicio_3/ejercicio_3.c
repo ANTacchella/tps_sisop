@@ -506,10 +506,16 @@ int main(int argc, char* argv[]){
                 cant_soc = contar_registros_archivo(path_soc);
                 if(cant_soc == -1){
                     printf("\nError al abrir el archivo de socios!!\n");
+                    borrar_shm();
+                    sem_unlink(SEM_PAGOS);
+                    sem_unlink(SEM_ASIST);
                     exit(1);
                 }
                 else if(cant_soc == 0){
                     printf("\nEl archivo de socios está VACIO!!\n");
+                    borrar_shm();
+                    sem_unlink(SEM_PAGOS);
+                    sem_unlink(SEM_ASIST);
                     exit(1);
                 }
 
