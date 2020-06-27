@@ -11,7 +11,7 @@
 #include "hashmap.h"
 
 /*
-ejercicio_4.c | Trabajo Práctico 3) Ejercicio 4) | Primera Entrega
+ejercicio_4.c | Trabajo Práctico 3) Ejercicio 4) | Primera Reentrega
 Maximiliano José Bernardo | 41912800
 Nicolás Agustín Fábregues | 41893896
 Joela Belén Kachanosqui | 41917556
