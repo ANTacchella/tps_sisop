@@ -13,6 +13,9 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <dirent.h>
+#include <errno.h>
+#include <regex.h>
 
 typedef struct
 {
@@ -27,6 +30,11 @@ typedef struct{
     char com[6];
 }t_usuario;
 
+typedef struct{
+    char usuario[40];
+    char asist;
+}t_asist;
+
 //Función que parsea los datos de un string a un t_usuario
 void text_to_user(const char *cad, t_usuario *user){
     char usr[40],clv[20],com[6];
@@ -36,6 +44,14 @@ void text_to_user(const char *cad, t_usuario *user){
     strncpy(user->usuario,usr,sizeof(user->usuario));
     strncpy(user->clave,clv,sizeof(user->clave));
     strncpy(user->com,com,sizeof(user->com));
+}
+
+void text_to_asist(const char *cad, t_asist *asist){
+    char usr[40];
+
+    sscanf(cad,"%[^|]|%c",usr,&asist->asist);
+
+    strncpy(asist->usuario,usr,sizeof(asist->usuario));
 }
 
 
@@ -209,7 +225,7 @@ int login_al_sistema(t_usuario *user){
     return 0;
 }
 
-int login(const char *param, char* respuesta){
+int login(const char *param, char* respuesta,t_usuario *usuario){
     t_usuario user;
 
     sscanf(param,"%[^;];%[^\n]",user.usuario,user.clave);
@@ -217,6 +233,7 @@ int login(const char *param, char* respuesta){
     int result = login_al_sistema(&user);
 
     if(result == 1){
+        *usuario = user;
         sprintf(respuesta,"Login exitoso;%s;%s;%c;%s",user.usuario,user.clave,user.rol,user.com);
         return 1;
     }
@@ -225,13 +242,148 @@ int login(const char *param, char* respuesta){
     }
 }
 
+int consultar_asistencia_alu(const char* usuario, const char* com, const char* fecha){
+
+    char archivo[100];
+    int encabezado = 1;
+    t_asist asist;
+    sprintf(archivo,"./asistencias/Asistencia_%s_%s.txt",fecha,com);
+
+    FILE* fp = fopen(archivo,"rt");
+    if(fp == NULL){
+        return -1;
+    }
+
+    char buff[200];
+    while(fgets(buff,sizeof(buff),fp) != NULL){
+
+        if(!encabezado){
+            text_to_asist(buff,&asist);
+
+            if(strcmp(asist.usuario,usuario) == 0){
+                fclose(fp);
+                return asist.asist == 'P' ? 1 : 0;
+            }
+        }
+        encabezado = 0;
+    }
+    fclose(fp);
+    return -1;
+}
+
+int calcular_porcentaje_asistencias(const t_usuario* user,char* respuesta){
+
+    DIR* FD;
+    struct dirent* in_file;
+    FILE *entry_file;
+    char buffer[200];
+
+    t_asist asist;
+    int presentes = 0, ausentes = 0;
+
+    regex_t regex;
+    char sregex[100];
+    int reti, encabezado;
+
+    sprintf(sregex,"Asistencia_[0-9]{4}-[0-9]{2}-[0-9]{2}_%s.txt$",user->com);
+
+    reti = regcomp(&regex, sregex, REG_EXTENDED);
+    if (reti) {
+        fprintf(stderr, "Could not compile regex\n");
+        return -1;
+    }
+
+    /* Scanning the in directory */
+    if (NULL == (FD = opendir ("./asistencias/"))) 
+    {
+        printf("Error : Failed to open input directory - %s\n", strerror(errno)); 
+
+        return -1;
+    }
+
+    while ((in_file = readdir(FD))) 
+    {
+
+        /* On linux/Unix we don't want current and parent directories
+         * On windows machine too, thanks Greg Hewgill
+         */
+        if (!strcmp (in_file->d_name, "."))
+            continue;
+        if (!strcmp (in_file->d_name, ".."))    
+            continue;
+        
+        char msgbuf[100];
+        
+        reti = regexec(&regex, in_file->d_name, 0, NULL, 0);
+        if(reti == REG_NOMATCH)
+            continue;
+        
+        /* Open directory entry file for common operation */
+        /* TODO : change permissions to meet your need! */
+        char path[300];
+        sprintf(path,"./asistencias/%s",in_file->d_name);
+        entry_file = fopen(path, "rt");
+        if (entry_file == NULL)
+        {
+            printf("Error : Failed to open entry file - %s\n", strerror(errno));
+
+            return -1;
+        }
+
+        encabezado = 1;
+        /* Doing some struf with entry_file : */
+        /* For example use fgets */
+        while (fgets(buffer, sizeof(buffer), entry_file) != NULL)
+        {
+            if(encabezado != 1){
+                text_to_asist(buffer,&asist);
+                if(strcmp(asist.usuario,user->usuario) == 0){
+                    if(asist.asist == 'P'){
+                        presentes++;
+                    }
+                    else{
+                        ausentes++;
+                    }
+
+                break;
+                }
+            }
+            encabezado = 0;
+        }
+
+        /* When you finish with the file, close it */
+        fclose(entry_file);
+    }
+
+    regfree(&regex);
+
+    if(presentes == 0 && ausentes == 0){
+        return -1;
+    }
+
+    int total = presentes + ausentes;
+    float porc_pres = (float)((presentes * 100) / total), porc_aus = 100 - porc_pres;
+
+    sprintf(respuesta,"Porcentajes;%.2f;%.2f",porc_pres,porc_aus);
+
+    return (presentes != 0 || ausentes != 0);
+
+}
+
+int consultar_asistencia_doc(const char *com,const char* fecha){
+
+    int len;
+
+    
+
+}
+
 void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consulta del cliente asignado al hilo
 {
     info_cliente client = *((info_cliente*) args);
     char peticion[300], operacion, param[300];
     char respuestaErronea[100];
-    // t_lista lista_respuesta;
-    // crear_lista(&lista_respuesta);
+    t_usuario usuario;
     int i,j,len;
     while((len=recv(client.id_socket,peticion,300,0))>0)
     {
@@ -250,7 +402,7 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
                 //Operación de login
                 case 'a':
                     
-                    res = login(param,respuesta);
+                    res = login(param,respuesta,&usuario);
                     if(res == 1){
                         len = send(client.id_socket,respuesta,300,0);
                     }
@@ -266,10 +418,65 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
 
                     break;
 
-                //Operación de consultar asistencias
+                //Operación de consultar asistencia de alumno en tal fecha
                 case 'b':
 
-                    // res = consultar_asistencia()
+                    res = consultar_asistencia_alu(usuario.usuario,usuario.com,param);
+
+                    if(res == 1){
+                        sprintf(respuesta,"Presente");
+                        len = send(client.id_socket,respuesta,300,0);
+                    }
+                    else if(res == 0){
+                        sprintf(respuesta,"Ausente");
+                        len = send(client.id_socket,respuesta,300,0);
+                    }
+                    else{
+                        sprintf(respuesta,"No hay registro");
+                        len = send(client.id_socket,respuesta,300,0);
+                    }
+
+                    if(len < 0){
+                        perror("Mensaje no enviado!!\n");
+                    }
+                    pthread_mutex_unlock(&mutex);
+
+                    break;
+                
+                case 'c':
+
+                    res = calcular_porcentaje_asistencias(&usuario,respuesta);
+
+                    if(res == 1){
+                        len = send(client.id_socket,respuesta,300,0);
+                    }
+                    else{
+                        sprintf(respuesta,"Error de archivos de asistencia");
+                        len = send(client.id_socket,respuesta,300,0);
+                    }
+
+                    if(len < 0){
+                        perror("Mensaje no enviado!!\n");
+                    }
+                    pthread_mutex_unlock(&mutex);
+                    break;
+
+                case 'd':
+
+                    res = consultar_asistencia_doc(usuario.com,param);
+                    if(res == 1){
+                        sprintf(respuesta,"Fin de lista");
+                        len = send(client.id_socket,respuesta,300,0);
+                    }
+                    else{
+                        sprintf(respuesta,"Error de archivos de asistencia");
+                        len = send(client.id_socket,respuesta,300,0);
+                    }
+
+                    if(len < 0){
+                        perror("Mensaje no enviado!!\n");
+                    }
+                    pthread_mutex_unlock(&mutex);
                     break;
                 
                 default:

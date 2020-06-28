@@ -1,0 +1,5 @@
+NOMBRE|PRESENTE
+Alejandro|P
+Maxi|A
+Tomas|A
+Joela|P

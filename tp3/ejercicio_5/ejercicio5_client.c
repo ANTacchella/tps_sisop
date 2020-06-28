@@ -115,29 +115,159 @@ int main(int argc, char *argv[]){
         sprintf(peticion,"a;%s;%s",user.usuario,user.clave);
 
         len = send(socket_cliente,peticion,300,0); // Se envia la consulta al servidor
-            if(len < 0) 
-            {
-        	    perror("Mensaje no enviado!!\n");
-			    exit(1);
-            }
-            bzero(peticion,300);
-		    printf("Mensaje enviado, esperando respuesta...\n");
-				
-		    pthread_mutex_lock(&mutex_main); //Espera respuesta	del servidor	
-            sleep(2);
+        if(len < 0) 
+        {
+            perror("Mensaje no enviado!!\n");
+            exit(1);
+        }
+        bzero(peticion,300);
+        printf("Mensaje enviado, esperando respuesta...\n");
+            
+        pthread_mutex_lock(&mutex_main); //Espera respuesta	del servidor	
+        sleep(2);
         
     } while (intento < 3 && logged == 0);
 
     if (logged == 1) {
+        system("clear");
         printf("\nBienvenido al Sistema %s %s\n",(user.rol == 'A' ? "Alumno" : "Docente"),user.usuario);
-        print_menu_doc();
-        close(socket_cliente);
-        exit(EXIT_SUCCESS);
+        
     } else {
         printf("\nHa sobrepasado el numero maximo de intentos permitidos\n");
         close(socket_cliente);
         exit(EXIT_FAILURE);
     }
+
+    int op;
+
+    do{
+        if(user.rol == 'A'){
+            print_menu_alu();
+            printf("\n\nElija una de las opciones: ");
+            fflush(stdin);
+            scanf("%d",&op);
+            system("clear");
+
+            if(op == 1){
+                char fecha[12];
+                bzero(fecha,sizeof(fecha));
+
+                printf("Ingrese la fecha a consultar (yyyy-mm-dd): ");
+                fflush(stdin);
+                scanf("%s",fecha);
+
+                sprintf(peticion,"b;%s",fecha);
+
+                len = send(socket_cliente,peticion,300,0); // Se envia la consulta al servidor
+                if(len < 0) 
+                {
+                    perror("Mensaje no enviado!!\n");
+                    exit(1);
+                }
+                bzero(peticion,300);
+                printf("Mensaje enviado, esperando respuesta...\n");
+                    
+                pthread_mutex_lock(&mutex_main); //Espera respuesta	del servidor	
+                sleep(2);
+            }
+            else if(op == 2){
+
+                sprintf(peticion,"c;0");
+                
+                len = send(socket_cliente,peticion,300,0); // Se envia la consulta al servidor
+                if(len < 0) 
+                {
+                    perror("Mensaje no enviado!!\n");
+                    exit(1);
+                }
+                bzero(peticion,300);
+                printf("Mensaje enviado, esperando respuesta...\n");
+                    
+                pthread_mutex_lock(&mutex_main); //Espera respuesta	del servidor	
+                sleep(2);
+
+            }
+            else if(op == 3){
+                printf("Saliendo del sistema.");
+                fflush(stdout);
+                for(int i = 0; i < 5; i++){
+                    sleep(1);
+                    printf(".");
+                    fflush(stdout);
+                }
+                close(socket_cliente);
+                exit(EXIT_SUCCESS);
+            }
+            else{
+                printf("Opción inválida!! Por favor elija una opción correcta: ");
+                fflush(stdin);
+                scanf("%d",&op);
+            }
+        }
+        else{
+            print_menu_doc();
+            printf("\n\nElija una de las opciones: ");
+            fflush(stdin);
+            scanf("%d",&op);
+            system("clear");
+
+            if(op == 1){
+                char fecha[12];
+                bzero(fecha,sizeof(fecha));
+
+                printf("Ingrese la fecha a consultar (yyyy-mm-dd): ");
+                fflush(stdin);
+                scanf("%s",fecha);
+
+                sprintf(peticion,"d;%s",fecha);
+                printf("\n%s",peticion);
+
+                sleep(5);
+
+                len = send(socket_cliente,peticion,300,0); // Se envia la consulta al servidor
+                if(len < 0) 
+                {
+                    perror("Mensaje no enviado!!\n");
+                    exit(1);
+                }
+                bzero(peticion,300);
+                printf("Mensaje enviado, esperando respuesta...\n");
+                    
+                pthread_mutex_lock(&mutex_main); //Espera respuesta	del servidor	
+                sleep(2);
+            }
+            else if(op == 2){
+                char fecha[12];
+                bzero(fecha,sizeof(fecha));
+
+                printf("Ingrese la fecha de la clase (yyyy-mm-dd): ");
+                fflush(stdin);
+                scanf("%s",fecha);
+
+                sprintf(peticion,"d;%s;%s",user.com,fecha);
+                printf("\n%s",peticion);
+
+                sleep(5);
+
+            }
+            else if(op == 3){
+                printf("Saliendo del sistema.");
+                fflush(stdout);
+                for(int i = 0; i < 5; i++){
+                    sleep(1);
+                    printf(".");
+                    fflush(stdout);
+                }
+                close(socket_cliente);
+                exit(EXIT_SUCCESS);
+            }
+            else{
+                printf("Opción inválida!! Por favor elija una opción correcta: ");
+                fflush(stdin);
+                scanf("%d",&op);
+            }
+        }
+    }while(corte);
 
     do // Hasta que no se ingrese "QUIT" Escucha las consultas del cliente por stdin
     {
@@ -182,9 +312,37 @@ void * escuchar_servidor() // funcion que ejecuta el hilo que escucha al servido
                 logged = 0;
                 pthread_mutex_unlock(&mutex_main);
             }
-            if(strncmp(msg,"Login exitoso",13) == 0){
+            else if(strncmp(msg,"Login exitoso",13) == 0){
                 logged = 1;
                 sscanf(msg,"Login exitoso;%[^;];%[^;];%c;%[^\n]",user.usuario,user.clave,&user.rol,user.com);
+                pthread_mutex_unlock(&mutex_main);
+            }
+            else if(strcmp(msg,"Presente") == 0){
+                printf("%s\n",msg);
+                pthread_mutex_unlock(&mutex_main);
+            }
+            else if(strcmp(msg,"Ausente") == 0){
+                printf("%s\n",msg);
+                pthread_mutex_unlock(&mutex_main);
+            }
+            else if(strcmp(msg,"No hay registro") == 0){
+                printf("%s\n",msg);
+                pthread_mutex_unlock(&mutex_main);
+            }
+            else if(strncmp(msg,"Porcentajes",11) == 0){
+                char* aux = strtok(msg,";");
+                aux = strtok(NULL,";");
+
+                printf("Porcentaje de presentes: %s%c\n",aux,'%');
+
+                aux = strtok(NULL,";");
+                printf("Porcentaje de ausente: %s%c\n",aux,'%');
+
+                pthread_mutex_unlock(&mutex_main);
+
+            }
+            else if(strcmp(msg,"Error de archivos de asistencia") == 0){
+                printf("%s\n",msg);
                 pthread_mutex_unlock(&mutex_main);
             }
             if(strcmp(msg,"-Servidor Desconectado")==0)
