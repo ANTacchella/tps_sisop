@@ -29,6 +29,8 @@ int logged = 0;
 void signalHandler(int );
 void * escuchar_servidor();
 void ayuda(){printf("\nAIUDAAAAAAAA\n");}
+void print_menu_alu();
+void print_menu_doc();
 
 extern int errno;
 
@@ -74,7 +76,7 @@ int main(int argc, char *argv[]){
     direccion_server.sin_port = htons(PORT);
     direccion_server.sin_addr.s_addr = inet_addr( ip );
     int res = connect(socket_cliente, (struct sockaddr *)&direccion_server, sizeof(direccion_server)); // Hacemos la conexion al servidor.
-    printf("\n********************\nport: %d\naddress: %s\n***********************\n",PORT,ip);
+
     if ( res < 0) 
     { 
         int errnum = errno;
@@ -127,7 +129,8 @@ int main(int argc, char *argv[]){
     } while (intento < 3 && logged == 0);
 
     if (logged == 1) {
-        printf("\nBienvenido al Sistema\n");
+        printf("\nBienvenido al Sistema %s %s\n",(user.rol == 'A' ? "Alumno" : "Docente"),user.usuario);
+        print_menu_doc();
         close(socket_cliente);
         exit(EXIT_SUCCESS);
     } else {
@@ -217,3 +220,23 @@ void signalHandler( int dummy) // funcion para controlar señales del cliente
     exit(EXIT_SUCCESS);
 }
 
+void print_menu_alu(){
+    printf("\n********************************MENU********************************\n");
+    printf("*                                                                  *\n");
+    printf("*\t1- Consultar asistencia en fecha                           *\n");
+    printf("*\t2- Consultar porcentaje de asistencias/inasistencias       *\n");
+    printf("*\t3- Salir                                                   *\n");
+    printf("*                                                                  *\n");
+    printf("********************************************************************\n");
+}
+
+void print_menu_doc(){
+    printf("\n********************************MENU********************************\n");
+    printf("*                                                                  *\n");
+    printf("*\t1- Consultar asistencias de alumnos en fecha               *\n");
+    printf("*\t2- Cargar asistencias                                      *\n");
+    printf("*\t3- Salir                                                   *\n");
+    printf("*                                                                  *\n");
+    printf("********************************************************************\n");
+
+}
