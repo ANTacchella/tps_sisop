@@ -6,13 +6,13 @@ void crear_lista(t_lista *l)
     *l=NULL;
 }
 
-int compare(const t_articulo* r1,const t_articulo* r2)
+int compare(const t_asist* r1,const t_asist* r2)
 {
-    return r1->item_id-r2->item_id;
+    return strcmp(r1->usuario,r2->usuario);
 }
 
 
-int alistar_orden(t_lista* l,const t_articulo* d,t_cmp compare)
+int alistar_orden(t_lista* l,const t_asist* d,t_cmp compare)
 {
     int cmp;
     t_nodo* act=*l,
@@ -57,10 +57,6 @@ int alistar_orden(t_lista* l,const t_articulo* d,t_cmp compare)
     *l=nue;
     return 1;
 }
-int obtener_de_lista(t_lista* l,t_articulo* d,t_cmp compare)
-{
-
-}
 
 void poner_al_inicio(t_lista*  l)
 {
@@ -73,68 +69,47 @@ void poner_al_inicio(t_lista*  l)
         *l=(*l)->ant;
 }
 
-void mostrar_lista(t_lista* l)
-{
-    t_nodo *act=*l;
-    while(act->ant){
-        act=act->ant;
-    }
-    while (act)
-    {
-        printf("%d;%s;%s;%s\n",act->registro.item_id,act->registro.articulo,act->registro.producto,act->registro.marca);
-        act=act->sig;
-    }
-}
+// void mostrar_lista(t_lista* l)
+// {
+//     t_nodo *act=*l;
+//     while(act->ant){
+//         act=act->ant;
+//     }
+//     while (act)
+//     {
+//         printf("%d;%s;%s;%s\n",act->registro.item_id,act->registro.articulo,act->registro.producto,act->registro.marca);
+//         act=act->sig;
+//     }
+// }
 
+void text_to_asist(const char *cad, t_asist *asist){
+    char usr[40];
+
+    sscanf(cad,"%[^|]|%c",usr,&asist->asist);
+
+    strncpy(asist->usuario,usr,sizeof(asist->usuario));
+}
 
 void cargar_lista(t_lista* l,char* path)
 {
     char linea[200];
     FILE* pf=fopen(path,"rt");
-    int ini,fin,i=0;
     if(!pf){
-   // printf("No se pudo abrir el archivo a leer\n");
-    exit(EXIT_FAILURE);
+    // printf("No se pudo abrir el archivo a leer\n");
+        *l = NULL;
+        exit(EXIT_FAILURE);
     }
     else
     {
       //printf("Se abrio el archivo a leer correctamente\n");
     }
+
+    t_asist reg;
+
     fgets(linea,200,pf);
     while(fgets(linea,200,pf))
     {
-        ini=0;
-        fin=0;
-        char item[50];
-        t_articulo reg;
-        while(linea[fin] != ';')
-            fin++;
-        
-        strncpy(item,&linea[ini],fin);
-        item[fin]='\0';
-        reg.item_id=atoi(item);
-        fin++;
-        ini=fin;
-        while(linea[fin] != ';'){
-            fin++;
-        }
-        strncpy(reg.articulo,&linea[ini],fin-ini);
-        reg.articulo[fin-ini]='\0';
-        fin++;
-        ini=fin;
-        while(linea[fin] != ';')
-            fin++;
-        strncpy(reg.producto,&linea[ini],fin-ini);
-        reg.producto[fin-ini]='\0';
-        fin++;
-        ini=fin;
-        int noEsLetra=0;
-        while(linea[fin] != '\n' )
-        {
-            fin++;
-        }
-        strncpy(reg.marca,&linea[ini],fin-1-ini);
-        reg.marca[fin-1-ini]='\0';
+        text_to_asist(linea,&reg);
         
         alistar_orden(l,&reg,compare);
     }
@@ -156,7 +131,7 @@ void vaciar_lista(t_lista* l)
     }
 }
 
-int ver_registro(t_lista* l,t_articulo* d)
+int ver_registro(t_lista* l,t_asist* d)
 {
     if(*l!=NULL)
     {
@@ -166,7 +141,7 @@ int ver_registro(t_lista* l,t_articulo* d)
     return -1;
 }
 
-int desalistar(t_lista* l,t_articulo* d,t_cmp compare)
+int desalistar(t_lista* l,t_asist* d,t_cmp compare)
 {
     t_nodo* act=*l,
             *sig,
@@ -217,104 +192,45 @@ int lista_vacia(t_lista* l)
     return 1;
 }
 
+void cargar_lista_usuarios(t_lista* l, const char *path, const char* com){
 
-t_lista buscar_prod_id(t_lista *l,char* peticion)
-{
-    t_nodo* act=*l,
-            *sig,
-            *ant;
-    t_articulo d;
-    t_lista aux;
-    crear_lista(&aux);
-    d.item_id=atoi(peticion);
-    int cmp;
-    if(act)
-    {
-        while(act->ant && compare(&(act->registro),&d)>0)
-            act = act->ant;
-        while(act->sig && compare(&(act->registro),&d)<0)
-            act = act->sig;
-        cmp=compare(&(act->registro),&d);
-        if(cmp!=0)
-            return aux;
-        else
-        {
-            strcpy(d.articulo,act->registro.articulo);
-            strcpy(d.marca,act->registro.marca);
-            strcpy(d.producto,act->registro.producto);
-            
-            strcat(d.articulo,"\0");
-            strcat(d.marca,"\0");
-            strcat(d.producto,"\0");
-        
-            alistar_orden(&aux,&d,compare);
-            return aux;
-        }
+    char linea[200];
+    FILE* pf=fopen(path,"rt");
+    if(!pf){
+        *l = NULL;
+        exit(EXIT_FAILURE);
     }
-}
-t_lista buscar_articulos(t_lista *l,char* peticion)
-{
-    
-    int largo=strlen(peticion);
-    t_lista aux;
-    t_articulo d;
-    strcpy(d.articulo,peticion);
-    d.articulo[largo-1]='\0';
-    crear_lista(&aux);
-    t_nodo* act=*l;
-    while(act->ant){
-        act=act->ant;
-    }
-    while(act->sig)
-    {
-        char *cmp =strstr(act->registro.articulo,d.articulo);
-        if(cmp!=NULL)
-            alistar_orden(&aux,&act->registro,compare);
-        act=act->sig;
-    }
-    return aux;
-}
-t_lista buscar_productos(t_lista *l,char* peticion)
-{
-    t_lista aux;
-    t_articulo d;
-    int largo = strlen(peticion);
-    strcpy(d.producto,peticion);
-    d.producto[largo-1]='\0';
-    crear_lista(&aux);
-    t_nodo* act=*l;
-    while(act->ant){
-        act=act->ant;
-    }
-    while(act->sig)
-    {
-        int cmp =strcmp(act->registro.producto,d.producto);
-        if(cmp==0)
-            alistar_orden(&aux,&act->registro,compare);
-        act=act->sig;
-    }
-    return aux;
-}
-t_lista buscar_marca(t_lista *l,char* peticion)
-{
-    t_lista aux;
-    t_articulo d;
-    int largo=strlen(peticion)-1;
-    strcpy(d.marca,peticion);
-    d.marca[largo]='\0';
-    crear_lista(&aux);
-    t_nodo* act=*l;
-    while(act->ant){
-        act=act->ant;
-    }
-    while(act->sig)
-    {
 
-        int cmp = strncmp(act->registro.marca,d.marca,largo);
-        if(cmp==0){
-            alistar_orden(&aux,&act->registro,compare);
+    t_usuario reg;
+    t_asist asist;
+
+    fgets(linea,200,pf);
+    while(fgets(linea,200,pf))
+    {
+        text_to_user(linea,&reg);
+
+        if(reg.rol == 'A'){
+            if(strcmp(com,reg.com) == 0){
+
+                strcpy(asist.usuario,reg.usuario);
+                
+                alistar_orden(l,&asist,compare);
+            }
         }
-        act=act->sig;
+
     }
-    return aux;
+
+    fclose(pf);
+}
+
+
+//Función que parsea los datos de un string a un t_usuario
+void text_to_user(const char *cad, t_usuario *user){
+    char usr[40],clv[20],com[6];
+    int c;
+    c = sscanf(cad,"%[^|]|%[^|]|%c|%[^\n]",usr,clv,&user->rol,com);
+
+    strncpy(user->usuario,usr,sizeof(user->usuario));
+    strncpy(user->clave,clv,sizeof(user->clave));
+    strncpy(user->com,com,sizeof(user->com));
 }

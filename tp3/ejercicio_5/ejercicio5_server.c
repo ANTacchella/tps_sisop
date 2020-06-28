@@ -23,36 +23,36 @@ typedef struct
     pthread_t id_thread;
 }info_cliente;
 
-typedef struct{
-    char usuario[40];
-    char clave[20];
-    char rol;
-    char com[6];
-}t_usuario;
+// typedef struct{
+//     char usuario[40];
+//     char clave[20];
+//     char rol;
+//     char com[6];
+// }t_usuario;
 
-typedef struct{
-    char usuario[40];
-    char asist;
-}t_asist;
+// typedef struct{
+//     char usuario[40];
+//     char asist;
+// }t_asist;
 
-//Función que parsea los datos de un string a un t_usuario
-void text_to_user(const char *cad, t_usuario *user){
-    char usr[40],clv[20],com[6];
-    int c;
-    c = sscanf(cad,"%[^|]|%[^|]|%c|%[^\n]",usr,clv,&user->rol,com);
+// //Función que parsea los datos de un string a un t_usuario
+// void text_to_user(const char *cad, t_usuario *user){
+//     char usr[40],clv[20],com[6];
+//     int c;
+//     c = sscanf(cad,"%[^|]|%[^|]|%c|%[^\n]",usr,clv,&user->rol,com);
 
-    strncpy(user->usuario,usr,sizeof(user->usuario));
-    strncpy(user->clave,clv,sizeof(user->clave));
-    strncpy(user->com,com,sizeof(user->com));
-}
+//     strncpy(user->usuario,usr,sizeof(user->usuario));
+//     strncpy(user->clave,clv,sizeof(user->clave));
+//     strncpy(user->com,com,sizeof(user->com));
+// }
 
-void text_to_asist(const char *cad, t_asist *asist){
-    char usr[40];
+// void text_to_asist(const char *cad, t_asist *asist){
+//     char usr[40];
 
-    sscanf(cad,"%[^|]|%c",usr,&asist->asist);
+//     sscanf(cad,"%[^|]|%c",usr,&asist->asist);
 
-    strncpy(asist->usuario,usr,sizeof(asist->usuario));
-}
+//     strncpy(asist->usuario,usr,sizeof(asist->usuario));
+// }
 
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -370,11 +370,28 @@ int calcular_porcentaje_asistencias(const t_usuario* user,char* respuesta){
 
 }
 
-int consultar_asistencia_doc(const char *com,const char* fecha){
+t_lista consultar_asistencia_doc(const char *com,const char* fecha){
 
-    int len;
+    char path[100];
+    t_lista lista;
+    crear_lista(&lista);
 
-    
+    sprintf(path,"./asistencias/Asistencia_%s_%s.txt",fecha,com);
+
+    cargar_lista(&lista,path);
+
+    return lista;
+
+}
+
+t_lista obtener_lista_alumnos(const char* com){
+
+    t_lista lista;
+    crear_lista(&lista);
+
+    cargar_lista_usuarios(&lista,"./archivos/Usuarios.txt",com);
+
+    return lista;
 
 }
 
@@ -384,6 +401,9 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
     char peticion[300], operacion, param[300];
     char respuestaErronea[100];
     t_usuario usuario;
+    t_lista lista;
+    crear_lista(&lista);
+    t_asist asist;
     int i,j,len;
     while((len=recv(client.id_socket,peticion,300,0))>0)
     {
@@ -463,20 +483,73 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
 
                 case 'd':
 
-                    res = consultar_asistencia_doc(usuario.com,param);
-                    if(res == 1){
-                        sprintf(respuesta,"Fin de lista");
+                    lista = consultar_asistencia_doc(usuario.com,param);
+                    if(lista == NULL){
+                        sprintf(respuesta,"Error de archivos de asistencia");
                         len = send(client.id_socket,respuesta,300,0);
                     }
                     else{
-                        sprintf(respuesta,"Error de archivos de asistencia");
-                        len = send(client.id_socket,respuesta,300,0);
+
+                        len = send(client.id_socket,"Inicio de lista",300,0);
+
+                        if(len > 0){
+
+                            while(lista->ant){
+                                lista = lista->ant;
+                            }
+
+                            while (lista_vacia(&lista) != -1)
+                            {
+                                ver_registro(&lista,&asist);
+                                desalistar(&lista,&asist,compare);
+                                sprintf(respuesta,"%s|%c",asist.usuario,asist.asist);
+                                len = send(client.id_socket,respuesta,300,0);
+                            }
+                            len = send(client.id_socket,"Fin de lista",300,0);
+
+                        }
                     }
 
                     if(len < 0){
                         perror("Mensaje no enviado!!\n");
                     }
                     pthread_mutex_unlock(&mutex);
+                    break;
+
+                case 'e':
+
+                    lista = obtener_lista_alumnos(usuario.com);
+                    if(lista == NULL){
+                        sprintf(respuesta,"Error de archivos de usuarios");
+                        len = send(client.id_socket,respuesta,300,0);
+                    }
+                    else{
+
+                        len = send(client.id_socket,"Inicio de lista de alumnos",300,0);
+
+                        if(len > 0){
+
+                            while(lista->ant){
+                                lista = lista->ant;
+                            }
+
+                            while (lista_vacia(&lista) != -1)
+                            {
+                                ver_registro(&lista,&asist);
+                                desalistar(&lista,&asist,compare);
+                                sprintf(respuesta,"%s",asist.usuario);
+                                len = send(client.id_socket,respuesta,300,0);
+                            }
+                            len = send(client.id_socket,"Fin de lista",300,0);
+
+                        }
+                    }
+
+                    if(len < 0){
+                        perror("Mensaje no enviado!!\n");
+                    }
+                    pthread_mutex_unlock(&mutex);
+
                     break;
                 
                 default:

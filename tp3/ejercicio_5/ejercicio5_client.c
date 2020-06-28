@@ -138,7 +138,7 @@ int main(int argc, char *argv[]){
         exit(EXIT_FAILURE);
     }
 
-    int op;
+    int op = 0;
 
     do{
         if(user.rol == 'A'){
@@ -220,9 +220,6 @@ int main(int argc, char *argv[]){
                 scanf("%s",fecha);
 
                 sprintf(peticion,"d;%s",fecha);
-                printf("\n%s",peticion);
-
-                sleep(5);
 
                 len = send(socket_cliente,peticion,300,0); // Se envia la consulta al servidor
                 if(len < 0) 
@@ -244,10 +241,19 @@ int main(int argc, char *argv[]){
                 fflush(stdin);
                 scanf("%s",fecha);
 
-                sprintf(peticion,"d;%s;%s",user.com,fecha);
-                printf("\n%s",peticion);
+                sprintf(peticion,"e;%s",fecha);
 
-                sleep(5);
+                len = send(socket_cliente,peticion,300,0); // Se envia la consulta al servidor
+                if(len < 0) 
+                {
+                    perror("Mensaje no enviado!!\n");
+                    exit(1);
+                }
+                bzero(peticion,300);
+                printf("Mensaje enviado, esperando respuesta...\n");
+                    
+                pthread_mutex_lock(&mutex_main); //Espera respuesta	del servidor	
+                sleep(2);
 
             }
             else if(op == 3){
@@ -269,33 +275,6 @@ int main(int argc, char *argv[]){
         }
     }while(corte);
 
-    do // Hasta que no se ingrese "QUIT" Escucha las consultas del cliente por stdin
-    {
-        printf("Ingrese la consulta deseada...\n");
-        if(fgets (peticion, 300, stdin)==NULL){
-            printf("No se ingreso ninguna consulta\n");
-        }
-        if(strcmp(peticion,"QUIT\n")==0)
-        {
-            printf("\n\nFin de la consulta\n");
-            break;
-        }
-        else
-        {
-            len = send(socket_cliente,peticion,300,0); // Se envia la consulta al servidor
-            if(len < 0) 
-            {
-        	    perror("Mensaje no enviado!!\n");
-			    exit(1);
-            }
-            bzero(peticion,300);
-		    printf("Mensaje enviado, esperando respuesta...\n");
-				
-		    pthread_mutex_lock(&mutex_main); //Espera respuesta	del servidor	
-            sleep(2);
-        }
-        fflush(stdin);
-    } while (corte);
 
     close(socket_cliente);
     return 0;
@@ -303,11 +282,12 @@ int main(int argc, char *argv[]){
 
 void * escuchar_servidor() // funcion que ejecuta el hilo que escucha al servidor
 {
-    int len,escuchar=1;
+    int len,escuchar=1,rec_lista=0;
     char msg[300];
     bzero(msg,300);
     while((len=recv(socket_cliente,msg,300,0)>0))
     {
+        if(rec_lista == 0){
             if(strcmp(msg,"Error de login")==0){
                 logged = 0;
                 pthread_mutex_unlock(&mutex_main);
@@ -345,6 +325,13 @@ void * escuchar_servidor() // funcion que ejecuta el hilo que escucha al servido
                 printf("%s\n",msg);
                 pthread_mutex_unlock(&mutex_main);
             }
+            else if(strcmp(msg,"Inicio de lista") == 0){
+                rec_lista = 1;
+                printf("NOMBRE|PRESENTE\n");
+            }
+            else if(strcmp(msg,"Inicio de lista de alumnos") == 0){
+                rec_lista = 2;
+            }
             if(strcmp(msg,"-Servidor Desconectado")==0)
                 break;
             if(strcmp(msg,"Conectado al servidor\n")==0)
@@ -352,17 +339,25 @@ void * escuchar_servidor() // funcion que ejecuta el hilo que escucha al servido
                 printf("%s",msg);
                 pthread_mutex_unlock(&mutex_hilo);
             }
-            else{
-                if(strcmp(msg,"fin de lista")!=0)
-                {
-                    // printf("%s\n",msg);
-                }
-                else{
-                    printf("\n");
-                    pthread_mutex_unlock(&mutex_main);
-                }
-            
+        }
+        else if(rec_lista == 1){
+            if(strcmp(msg,"Fin de lista") == 0){
+                rec_lista = 0;
+                pthread_mutex_unlock(&mutex_main);
             }
+            else{
+                printf("%s\n",msg);
+            }
+        }
+        else if(rec_lista == 2){
+            if(strcmp(msg,"Fin de lista") == 0){
+                rec_lista = 0;
+                pthread_mutex_unlock(&mutex_main);
+            }
+            else{
+                printf("%s\n",msg);
+            }
+        }   
         
         memset(msg,'\0',sizeof(msg));
     }
