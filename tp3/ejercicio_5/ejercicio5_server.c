@@ -23,38 +23,6 @@ typedef struct
     pthread_t id_thread;
 }info_cliente;
 
-// typedef struct{
-//     char usuario[40];
-//     char clave[20];
-//     char rol;
-//     char com[6];
-// }t_usuario;
-
-// typedef struct{
-//     char usuario[40];
-//     char asist;
-// }t_asist;
-
-// //Función que parsea los datos de un string a un t_usuario
-// void text_to_user(const char *cad, t_usuario *user){
-//     char usr[40],clv[20],com[6];
-//     int c;
-//     c = sscanf(cad,"%[^|]|%[^|]|%c|%[^\n]",usr,clv,&user->rol,com);
-
-//     strncpy(user->usuario,usr,sizeof(user->usuario));
-//     strncpy(user->clave,clv,sizeof(user->clave));
-//     strncpy(user->com,com,sizeof(user->com));
-// }
-
-// void text_to_asist(const char *cad, t_asist *asist){
-//     char usr[40];
-
-//     sscanf(cad,"%[^|]|%c",usr,&asist->asist);
-
-//     strncpy(asist->usuario,usr,sizeof(asist->usuario));
-// }
-
-
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 char archivo[100];
@@ -63,7 +31,7 @@ info_cliente clientes[15];
 int socket_server;
 int conectados=0;
 int escuchar=1;
-// t_lista lista;
+FILE* registro;
 
 void ayuda(){printf("\nAIUDAAAAAAAA\n");}
 int abrir_socket();
@@ -130,28 +98,13 @@ int main(int argc, char *argv[])
     signal(SIGTERM,signalHandler); // Definimos el comportamiento para las señales que se emitiran al demonio; 
     signal(SIGQUIT,signalHandler); //
 
-    // crear_lista(&lista);
-    // cargar_lista(&lista,archivo); // Creamos la lista donde se almacenara los registros de la base de datos.
-
-    pid_t pid,sid;
-    // pid = fork(); // Hacemos un fork y creamos el demonio.
-    // if (pid < 0)
-    // {
-    //     exit(EXIT_FAILURE);
-    // }
-    // if (pid > 0) 
-    // {
-    //     exit(EXIT_SUCCESS);
-    // }
-    // sid = setsid(); // Cambiamos el sid para que el proceso demonio no muera.
-    // if (sid < 0) 
-    // {
-    //   perror("Nuevo SID fallo");
-    //   exit(EXIT_FAILURE);
-    // }
-    // umask(0); // Le damos permisos al demonio
-
     daemon(1,1);
+
+    registro = fopen("./registro.log","wt");
+    if(registro == NULL){
+        printf("Error al crear el registro!\n");
+        exit(EXIT_FAILURE);
+    }
 
     while(escuchar) 
     {
@@ -173,10 +126,17 @@ int main(int argc, char *argv[])
                 perror("Mensaje no enviado!\n");
                 exit(EXIT_FAILURE);
             }
+
+            fprintf(registro,"Se conectó correctamente\n");
+            fflush(registro);
+            fprintf(registro,"Conectado al servidor\n");
+            fflush(registro);
+
             pthread_mutex_unlock(&mutex);
         }
     }
 
+    fclose(registro);
     return 0;
 }
 
@@ -187,10 +147,14 @@ void signalHandler(int dummy) // funcion que atiende las señales
     for(int i = 0; i< conectados ; i++)
     {
         send(clientes[i].id_socket,"-Servidor Desconectado",100,0); // Desconecto a los clientes
+        fprintf(registro,"-Servidor Desconectado\n");
+        fflush(registro);
+        printf("-Servidor Desconectado\n");
+
         close(clientes[i].id_socket);
     }
     pthread_mutex_unlock(&mutex);
-    // vaciar_lista(&lista);
+    fclose(registro);
     close(socket_server); // Cierro el server
     exit(EXIT_SUCCESS);
 }
@@ -293,7 +257,6 @@ int calcular_porcentaje_asistencias(const t_usuario* user,char* respuesta){
         return -1;
     }
 
-    /* Scanning the in directory */
     if (NULL == (FD = opendir ("./asistencias/"))) 
     {
         printf("Error : Failed to open input directory - %s\n", strerror(errno)); 
@@ -304,9 +267,6 @@ int calcular_porcentaje_asistencias(const t_usuario* user,char* respuesta){
     while ((in_file = readdir(FD))) 
     {
 
-        /* On linux/Unix we don't want current and parent directories
-         * On windows machine too, thanks Greg Hewgill
-         */
         if (!strcmp (in_file->d_name, "."))
             continue;
         if (!strcmp (in_file->d_name, ".."))    
@@ -318,8 +278,6 @@ int calcular_porcentaje_asistencias(const t_usuario* user,char* respuesta){
         if(reti == REG_NOMATCH)
             continue;
         
-        /* Open directory entry file for common operation */
-        /* TODO : change permissions to meet your need! */
         char path[300];
         sprintf(path,"./asistencias/%s",in_file->d_name);
         entry_file = fopen(path, "rt");
@@ -331,8 +289,7 @@ int calcular_porcentaje_asistencias(const t_usuario* user,char* respuesta){
         }
 
         encabezado = 1;
-        /* Doing some struf with entry_file : */
-        /* For example use fgets */
+        
         while (fgets(buffer, sizeof(buffer), entry_file) != NULL)
         {
             if(encabezado != 1){
@@ -351,7 +308,6 @@ int calcular_porcentaje_asistencias(const t_usuario* user,char* respuesta){
             encabezado = 0;
         }
 
-        /* When you finish with the file, close it */
         fclose(entry_file);
     }
 
@@ -398,7 +354,7 @@ t_lista obtener_lista_alumnos(const char* com){
 void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consulta del cliente asignado al hilo
 {
     info_cliente client = *((info_cliente*) args);
-    char peticion[300], operacion, param[300];
+    char peticion[300], operacion, param[300], path[100];
     char respuestaErronea[100];
     t_usuario usuario;
     t_lista lista;
@@ -414,6 +370,10 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
             pthread_mutex_lock(&mutex);
 
             sscanf(peticion,"%c;%s",&operacion,param);
+            fprintf(registro,"%s\n",peticion);
+            fflush(registro);
+            printf("%s\n",peticion);
+
             char respuesta[300];
             int res;
 
@@ -425,10 +385,16 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
                     res = login(param,respuesta,&usuario);
                     if(res == 1){
                         len = send(client.id_socket,respuesta,300,0);
+                        fprintf(registro,"%s\n",respuesta);
+                        fflush(registro);
+                        printf("%s\n",respuesta);
                     }
                     else{
                         sprintf(respuesta,"Error de login");
                         len = send(client.id_socket,respuesta,300,0);
+                        fprintf(registro,"%s\n",respuesta);
+                        fflush(registro);
+                        printf("%s\n",respuesta);
                     }
 
                     if(len < 0){
@@ -446,14 +412,23 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
                     if(res == 1){
                         sprintf(respuesta,"Presente");
                         len = send(client.id_socket,respuesta,300,0);
+                        fprintf(registro,"%s\n",respuesta);
+                        fflush(registro);
+                        printf("%s\n",respuesta);
                     }
                     else if(res == 0){
                         sprintf(respuesta,"Ausente");
                         len = send(client.id_socket,respuesta,300,0);
+                        fprintf(registro,"%s\n",respuesta);
+                        fflush(registro);
+                        printf("%s\n",respuesta);
                     }
                     else{
                         sprintf(respuesta,"No hay registro");
                         len = send(client.id_socket,respuesta,300,0);
+                        fprintf(registro,"%s\n",respuesta);
+                        fflush(registro);
+                        printf("%s\n",respuesta);
                     }
 
                     if(len < 0){
@@ -463,16 +438,23 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
 
                     break;
                 
+                //Operación de consultar porcentaje de asistencias e inasistencias
                 case 'c':
 
                     res = calcular_porcentaje_asistencias(&usuario,respuesta);
 
                     if(res == 1){
                         len = send(client.id_socket,respuesta,300,0);
+                        fprintf(registro,"%s\n",respuesta);
+                        fflush(registro);
+                        printf("%s\n",respuesta);
                     }
                     else{
                         sprintf(respuesta,"Error de archivos de asistencia");
                         len = send(client.id_socket,respuesta,300,0);
+                        fprintf(registro,"%s\n",respuesta);
+                        fflush(registro);
+                        printf("%s\n",respuesta);
                     }
 
                     if(len < 0){
@@ -481,16 +463,23 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
                     pthread_mutex_unlock(&mutex);
                     break;
 
+                //Operación de consultar la lista de asistencias en una fecha
                 case 'd':
 
                     lista = consultar_asistencia_doc(usuario.com,param);
                     if(lista == NULL){
                         sprintf(respuesta,"Error de archivos de asistencia");
                         len = send(client.id_socket,respuesta,300,0);
+                        fprintf(registro,"%s\n",respuesta);
+                        fflush(registro);
+                        printf("%s\n",respuesta);
                     }
                     else{
 
                         len = send(client.id_socket,"Inicio de lista",300,0);
+                        fprintf(registro,"%s\n",respuesta);
+                        fflush(registro);
+                        printf("%s\n",respuesta);
 
                         if(len > 0){
 
@@ -504,8 +493,14 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
                                 desalistar(&lista,&asist,compare);
                                 sprintf(respuesta,"%s|%c",asist.usuario,asist.asist);
                                 len = send(client.id_socket,respuesta,300,0);
+                                fprintf(registro,"%s\n",respuesta);
+                                fflush(registro);
+                                printf("%s\n",respuesta);
                             }
                             len = send(client.id_socket,"Fin de lista",300,0);
+                            fprintf(registro,"Fin de lista\n");
+                            fflush(registro);
+                            printf("Fin de lista\n");
 
                         }
                     }
@@ -516,16 +511,23 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
                     pthread_mutex_unlock(&mutex);
                     break;
 
+                //Operación para enviar lista de alumnos de una comisión al cliente
                 case 'e':
 
                     lista = obtener_lista_alumnos(usuario.com);
                     if(lista == NULL){
                         sprintf(respuesta,"Error de archivos de usuarios");
                         len = send(client.id_socket,respuesta,300,0);
+                        fprintf(registro,"%s\n",respuesta);
+                        fflush(registro);
+                        printf("%s\n",respuesta);
                     }
                     else{
 
                         len = send(client.id_socket,"Inicio de lista de alumnos",300,0);
+                        fprintf(registro,"Inicio de lista de alumnos\n");
+                        fflush(registro);
+                        printf("Inicio de lista de alumnos\n");
 
                         if(len > 0){
 
@@ -539,8 +541,14 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
                                 desalistar(&lista,&asist,compare);
                                 sprintf(respuesta,"%s",asist.usuario);
                                 len = send(client.id_socket,respuesta,300,0);
+                                fprintf(registro,"%s\n",respuesta);
+                                fflush(registro);
+                                printf("%s\n",respuesta);
                             }
                             len = send(client.id_socket,"Fin de lista",300,0);
+                            fprintf(registro,"Fin de lista\n");
+                            fflush(registro);
+                            printf("Fin de lista\n");
 
                         }
                     }
@@ -551,6 +559,74 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
                     pthread_mutex_unlock(&mutex);
 
                     break;
+
+                //Operación para recibir las asistencias cargadas por el docente
+                case 'f':
+
+                    sprintf(path,"./asistencias/Asistencia_%s_%s.txt",param,usuario.com);
+
+                    if( access( path, F_OK ) != -1 ) {
+                        sprintf(respuesta,"Archivo de asistencia ya existente");
+                        len = send(client.id_socket,respuesta,300,0);
+                        fprintf(registro,"%s\n",respuesta);
+                        fflush(registro);
+                        printf("%s\n",respuesta);
+
+                        if(len < 0){
+                            perror("Mensaje no enviado!!\n");
+                        }
+                        pthread_mutex_unlock(&mutex);
+                        break;
+                    }
+
+                    FILE* fp = fopen(path,"wt");
+                    if(fp == NULL){
+                        printf("Error al crear el archivo!\n");
+                        sprintf(respuesta,"Error al crear archivo de asistencia");
+                        len = send(client.id_socket,respuesta,300,0);
+                        fprintf(registro,"%s\n",respuesta);
+                        fflush(registro);
+                        printf("%s\n",respuesta);
+
+                        if(len < 0){
+                            perror("Mensaje no enviado!!\n");
+                        }
+
+                        pthread_mutex_unlock(&mutex);
+                        break;
+                    }
+
+                    fprintf(fp,"NOMBRE|PRESENTE\n");
+
+                    sprintf(respuesta,"Archivo de asistencia creado exitosamente");
+                    len = send(client.id_socket,respuesta,300,0);
+                    fprintf(registro,"%s\n",respuesta);
+                    fflush(registro);
+                    printf("%s\n",respuesta);
+
+                    if(len < 0){
+                        perror("Mensaje no enviado!!\n");
+                        pthread_mutex_unlock(&mutex);
+                        break;
+                    }
+
+                    while((len=recv(client.id_socket,peticion,300,0))>0)
+                    {
+
+                        fprintf(registro,"%s\n",peticion);
+                        fflush(registro);
+                        printf("%s\n",peticion);
+                        if(strcmp(peticion,"Fin de lista") == 0){
+                            break;
+                        }
+
+                        fprintf(fp,"%s\n",peticion);
+                    }
+
+                    fclose(fp);
+
+                    pthread_mutex_unlock(&mutex);
+                    break;
                 
                 default:
                     break;
@@ -558,7 +634,6 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
 
             pthread_mutex_unlock(&mutex);
             }
-            //memset(peticion,'\0',sizeof(peticion));
     }
     pthread_mutex_lock(&mutex); // si salio del while significa que se desconecto el cliente
     for(i = 0; i < conectados; i++) {

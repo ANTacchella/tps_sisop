@@ -1,0 +1,4 @@
+NOMBRE|PRESENTE
+Joela|P
+Maximiliano|P
+Nicolas|P

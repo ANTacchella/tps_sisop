@@ -1,0 +1,3 @@
+NOMBRE|PRESENTE
+Alejandro|P
+Tomas|A

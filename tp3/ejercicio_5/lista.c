@@ -97,7 +97,7 @@ void cargar_lista(t_lista* l,char* path)
     if(!pf){
     // printf("No se pudo abrir el archivo a leer\n");
         *l = NULL;
-        exit(EXIT_FAILURE);
+        return;
     }
     else
     {
@@ -198,7 +198,7 @@ void cargar_lista_usuarios(t_lista* l, const char *path, const char* com){
     FILE* pf=fopen(path,"rt");
     if(!pf){
         *l = NULL;
-        exit(EXIT_FAILURE);
+        return;
     }
 
     t_usuario reg;

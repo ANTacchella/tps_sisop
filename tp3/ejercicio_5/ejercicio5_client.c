@@ -11,24 +11,22 @@
 #include <signal.h>
 #include <netdb.h>
 #include <errno.h>
-
-typedef struct{
-    char usuario[40];
-    char clave[20];
-    char rol;
-    char com[6];
-}t_usuario;
+#include "lista.h"
+#include "fechas.h"
+#include <regex.h>
 
 int socket_cliente;
 
 pthread_mutex_t mutex_main = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_hilo = PTHREAD_MUTEX_INITIALIZER;
 t_usuario user;
-int logged = 0;
+int logged = 0, error = 0;
+t_lista alumnos;
+
 
 void signalHandler(int );
 void * escuchar_servidor();
-void ayuda(){printf("\nAIUDAAAAAAAA\n");}
+void ayuda();
 void print_menu_alu();
 void print_menu_doc();
 
@@ -140,6 +138,18 @@ int main(int argc, char *argv[]){
 
     int op = 0;
 
+    regex_t regex;
+    char sregex[100];
+    int reti,val_fecha;
+
+    sprintf(sregex,"[0-9]{4}-[0-9]{2}-[0-9]{2}$");
+
+    reti = regcomp(&regex, sregex, REG_EXTENDED);
+    if (reti) {
+        fprintf(stderr, "Could not compile regex\n");
+        exit(EXIT_FAILURE);
+    }
+
     do{
         if(user.rol == 'A'){
             print_menu_alu();
@@ -155,6 +165,22 @@ int main(int argc, char *argv[]){
                 printf("Ingrese la fecha a consultar (yyyy-mm-dd): ");
                 fflush(stdin);
                 scanf("%s",fecha);
+            
+                t_fecha date;
+                sscanf(fecha,"%d-%d-%d",&date.anio,&date.mes,&date.dia);
+                val_fecha = validar(&date);
+                
+                reti = regexec(&regex, fecha, 0, NULL, 0);
+                while(reti == REG_NOMATCH || val_fecha == 0){
+                    printf("\nFormato de fecha inválido!!\n\nVuelva a ingresar (yyyy-mm-dd): ");
+                    fflush(stdin);
+                    scanf("%s",fecha);
+
+                    reti = regexec(&regex, fecha, 0, NULL, 0);
+                    sscanf(fecha,"%d-%d-%d",&date.anio,&date.mes,&date.dia);
+                    val_fecha = validar(&date);
+
+                }
 
                 sprintf(peticion,"b;%s",fecha);
 
@@ -169,6 +195,11 @@ int main(int argc, char *argv[]){
                     
                 pthread_mutex_lock(&mutex_main); //Espera respuesta	del servidor	
                 sleep(2);
+
+                printf("\nPresione cualquier tecla para continuar...\n");
+                char c;
+                while((c= getchar()) != '\n' && c != EOF);
+                getchar();
             }
             else if(op == 2){
 
@@ -185,6 +216,11 @@ int main(int argc, char *argv[]){
                     
                 pthread_mutex_lock(&mutex_main); //Espera respuesta	del servidor	
                 sleep(2);
+
+                printf("\nPresione cualquier tecla para continuar...\n");
+                char c;
+                while((c= getchar()) != '\n' && c != EOF);
+                getchar();
 
             }
             else if(op == 3){
@@ -219,6 +255,22 @@ int main(int argc, char *argv[]){
                 fflush(stdin);
                 scanf("%s",fecha);
 
+                t_fecha date;
+                sscanf(fecha,"%d-%d-%d",&date.anio,&date.mes,&date.dia);
+                val_fecha = validar(&date);
+                
+                reti = regexec(&regex, fecha, 0, NULL, 0);
+                while(reti == REG_NOMATCH || val_fecha == 0){
+                    printf("\nFormato de fecha inválido!!\n\nVuelva a ingresar (yyyy-mm-dd): ");
+                    fflush(stdin);
+                    scanf("%s",fecha);
+
+                    reti = regexec(&regex, fecha, 0, NULL, 0);
+                    sscanf(fecha,"%d-%d-%d",&date.anio,&date.mes,&date.dia);
+                    val_fecha = validar(&date);
+
+                }
+
                 sprintf(peticion,"d;%s",fecha);
 
                 len = send(socket_cliente,peticion,300,0); // Se envia la consulta al servidor
@@ -232,6 +284,11 @@ int main(int argc, char *argv[]){
                     
                 pthread_mutex_lock(&mutex_main); //Espera respuesta	del servidor	
                 sleep(2);
+
+                printf("\nPresione cualquier tecla para continuar...\n");
+                char c;
+                while((c= getchar()) != '\n' && c != EOF);
+                getchar();
             }
             else if(op == 2){
                 char fecha[12];
@@ -241,7 +298,23 @@ int main(int argc, char *argv[]){
                 fflush(stdin);
                 scanf("%s",fecha);
 
-                sprintf(peticion,"e;%s",fecha);
+                t_fecha date;
+                sscanf(fecha,"%d-%d-%d",&date.anio,&date.mes,&date.dia);
+                val_fecha = validar(&date);
+                
+                reti = regexec(&regex, fecha, 0, NULL, 0);
+                while(reti == REG_NOMATCH || val_fecha == 0){
+                    printf("\nFormato de fecha inválido!!\n\nVuelva a ingresar (yyyy-mm-dd): ");
+                    fflush(stdin);
+                    scanf("%s",fecha);
+
+                    reti = regexec(&regex, fecha, 0, NULL, 0);
+                    sscanf(fecha,"%d-%d-%d",&date.anio,&date.mes,&date.dia);
+                    val_fecha = validar(&date);
+
+                }
+
+                sprintf(peticion,"e;0");
 
                 len = send(socket_cliente,peticion,300,0); // Se envia la consulta al servidor
                 if(len < 0) 
@@ -254,6 +327,80 @@ int main(int argc, char *argv[]){
                     
                 pthread_mutex_lock(&mutex_main); //Espera respuesta	del servidor	
                 sleep(2);
+
+                while(alumnos->ant){
+                    alumnos = alumnos->ant;
+                }
+
+                sprintf(peticion,"f;%s",fecha);
+                len = send(socket_cliente,peticion,300,0);
+
+                if(len < 0){
+                    perror("Mensaje no enviado!!\n");
+                    exit(1);
+                }
+                pthread_mutex_lock(&mutex_main); //Espera respuesta	del servidor	
+
+                if(error == 1){
+                    printf("Error! El archivo de asistencias para esa fecha ya existe!\n");
+                    fflush(stdout);
+                    sleep(2);
+                    continue;
+                }
+                else if(error == 2){
+                    printf("Error al crear el archivo de asistencias!\n");
+                    fflush(stdout);
+                    sleep(2);
+                    continue;
+                }
+                sleep(2);
+
+                t_asist asist;
+                char op;
+                printf("Ingrese los valores de asistencia para cada alumno:\n\n");
+
+                while (lista_vacia(&alumnos) != -1)
+                {
+                    op = 0;
+                    ver_registro(&alumnos,&asist);
+                    desalistar(&alumnos,&asist,compare);
+
+                    printf("%s: ",asist.usuario);
+
+                    int c;
+                    while((c= getchar()) != '\n' && c != EOF);
+                    scanf("%c",&op);
+
+                    while (op != 'A' && op != 'P'){
+                        printf("Valor inválido!!\n\n%s: ",asist.usuario);
+                        while((c= getchar()) != '\n' && c != EOF);
+                        scanf("%c",&op);
+                    }
+
+                    asist.asist = op;
+
+                    sprintf(peticion,"%s|%c",asist.usuario,asist.asist);
+                    len = send(socket_cliente,peticion,300,0);
+
+                    if(len < 0){
+                        perror("Mensaje no enviado!!\n");
+                        exit(1);
+                    }
+                    
+                }
+                
+                sprintf(peticion,"Fin de lista");
+                len = send(socket_cliente,peticion,300,0);
+
+                if(len < 0){
+                    perror("Mensaje no enviado!!\n");
+                    exit(1);
+                }
+
+                printf("\nPresione cualquier tecla para continuar...\n");
+                char c;
+                while((c= getchar()) != '\n' && c != EOF);
+                getchar();
 
             }
             else if(op == 3){
@@ -285,6 +432,8 @@ void * escuchar_servidor() // funcion que ejecuta el hilo que escucha al servido
     int len,escuchar=1,rec_lista=0;
     char msg[300];
     bzero(msg,300);
+    t_asist asist;
+    crear_lista(&alumnos);
     while((len=recv(socket_cliente,msg,300,0)>0))
     {
         if(rec_lista == 0){
@@ -298,14 +447,17 @@ void * escuchar_servidor() // funcion que ejecuta el hilo que escucha al servido
                 pthread_mutex_unlock(&mutex_main);
             }
             else if(strcmp(msg,"Presente") == 0){
+                system("clear");
                 printf("%s\n",msg);
                 pthread_mutex_unlock(&mutex_main);
             }
             else if(strcmp(msg,"Ausente") == 0){
+                system("clear");
                 printf("%s\n",msg);
                 pthread_mutex_unlock(&mutex_main);
             }
             else if(strcmp(msg,"No hay registro") == 0){
+                system("clear");
                 printf("%s\n",msg);
                 pthread_mutex_unlock(&mutex_main);
             }
@@ -313,6 +465,7 @@ void * escuchar_servidor() // funcion que ejecuta el hilo que escucha al servido
                 char* aux = strtok(msg,";");
                 aux = strtok(NULL,";");
 
+                system("clear");
                 printf("Porcentaje de presentes: %s%c\n",aux,'%');
 
                 aux = strtok(NULL,";");
@@ -322,20 +475,35 @@ void * escuchar_servidor() // funcion que ejecuta el hilo que escucha al servido
 
             }
             else if(strcmp(msg,"Error de archivos de asistencia") == 0){
+                system("clear");
                 printf("%s\n",msg);
                 pthread_mutex_unlock(&mutex_main);
             }
             else if(strcmp(msg,"Inicio de lista") == 0){
+                system("clear");
                 rec_lista = 1;
                 printf("NOMBRE|PRESENTE\n");
             }
             else if(strcmp(msg,"Inicio de lista de alumnos") == 0){
                 rec_lista = 2;
             }
+            else if(strcmp(msg,"Archivo de asistencia ya existente") == 0){
+                error = 1;
+                pthread_mutex_unlock(&mutex_main);
+            }
+            else if(strcmp(msg,"Error al crear archivo de asistencia") == 0){
+                error = 2;
+                pthread_mutex_unlock(&mutex_main);
+            }
+            else if(strcmp(msg,"Archivo de asistencia creado exitosamente") == 0){
+                error = 0;
+                pthread_mutex_unlock(&mutex_main);
+            }
             if(strcmp(msg,"-Servidor Desconectado")==0)
                 break;
             if(strcmp(msg,"Conectado al servidor\n")==0)
             {
+                system("clear");
                 printf("%s",msg);
                 pthread_mutex_unlock(&mutex_hilo);
             }
@@ -355,7 +523,8 @@ void * escuchar_servidor() // funcion que ejecuta el hilo que escucha al servido
                 pthread_mutex_unlock(&mutex_main);
             }
             else{
-                printf("%s\n",msg);
+                strcpy(asist.usuario,msg);
+                alistar_orden(&alumnos,&asist,compare);
             }
         }   
         
@@ -392,4 +561,19 @@ void print_menu_doc(){
     printf("*                                                                  *\n");
     printf("********************************************************************\n");
 
+}
+
+void ayuda(){
+    printf("\n######    HELP Ejercicio5_Client    ######\n\n");
+    printf("Este programa dado dos parámetros de entrada: X e Y \n");
+    printf("Controla el uso de memoria y cpu por parte de los procesos cada 1seg.\n\n");
+    printf("Verificando que no se exceda del valor limite X e Y ingresado.\n");
+    printf("En caso de que un proceso supere esos limites\n");
+    printf("se lo registrara en un archivo: %s \n");
+    printf("\n");
+    printf("Para ejecutar el programa: \"./Ejercicio_4 X Y\",\n");
+    printf("donde X (limite de memoria) debe ser un float mayor a cero.\n");
+    printf("donde y (limite de cpu) debe ser un float mayor a cero.\n\n");
+    printf("El programa quedara ejecutando en segundo plano.\n");
+    printf("Para terminar el programa utilize la señal SIGUSR1.\n\n");
 }
