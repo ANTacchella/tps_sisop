@@ -15,6 +15,15 @@
 #define SEM_PAGOS "sem_pagos" //Nombre del semáforo de de pagos
 #define SEM_ASIST "sem_asist" //Nombre del semáforo de de asistencias
 
+/*
+# ejercicio_3.c | Trabajo Práctico 3) Ejercicio 3) | Primera reentrega
+# Maximiliano José Bernardo | 41912800
+# Nicolás Agustín Fábregues | 41893896
+# Joela Belén Kachanosqui | 41917556
+# Alejandro Nicolás Tacchella | 41893930
+# Tomás Martín Vera | 41988332
+*/
+
 typedef struct
 {
     char dep[20];

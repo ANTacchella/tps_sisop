@@ -17,6 +17,15 @@
 #include <errno.h>
 #include <regex.h>
 
+/*
+# ejercicio5_server.c | Trabajo Práctico 3) Ejercicio 5) | Primera reentrega
+# Maximiliano José Bernardo | 41912800
+# Nicolás Agustín Fábregues | 41893896
+# Joela Belén Kachanosqui | 41917556
+# Alejandro Nicolás Tacchella | 41893930
+# Tomás Martín Vera | 41988332
+*/
+
 typedef struct
 {
     int id_socket;

@@ -6,7 +6,7 @@
 #include <string.h>
 
 /*
-# ejercicio_1.c | Trabajo Práctico 3) Ejercicio 1) | Primera Entrega
+# ejercicio_1.c | Trabajo Práctico 3) Ejercicio 1) | Primera Reentrega
 # Maximiliano José Bernardo | 41912800
 # Nicolás Agustín Fábregues | 41893896
 # Joela Belén Kachanosqui | 41917556

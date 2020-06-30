@@ -7,7 +7,7 @@
 using namespace std; 
 
 /*
-# ejercicio_2.cpp | Trabajo Práctico 3) Ejercicio 2) | Primera Entrega
+# ejercicio_2.cpp | Trabajo Práctico 3) Ejercicio 2) | Primera reentrega
 # Maximiliano José Bernardo | 41912800
 # Nicolás Agustín Fábregues | 41893896
 # Joela Belén Kachanosqui | 41917556
