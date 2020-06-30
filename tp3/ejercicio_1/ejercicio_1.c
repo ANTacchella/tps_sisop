@@ -64,15 +64,15 @@ int main(int argc, char* argv[]){
     int l;
     char info[]="Para más información ejecute Ejercicio_1 -h o Ejercicio_1 --help.\n";
 
-    if( !strcmp("-h", argv[1]) || !strcmp("-?", argv[1]) || !strcmp("--help", argv[1]) ){
-        help();
-        return EXIT_SUCCESS;
-    }
-
     if(argc != 2){
         printf("\n¡ERROR!: El programa debe recibir un único parámetro\n");
         printf ("%s\n", info);
         return EXIT_FAILURE;
+    }
+
+    if( !strcmp("-h", argv[1]) || !strcmp("-?", argv[1]) || !strcmp("--help", argv[1]) ){
+        help();
+        return EXIT_SUCCESS;
     }
 
     l = atoi(argv[1]);

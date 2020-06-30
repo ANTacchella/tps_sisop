@@ -7,4 +7,4 @@ ejercicio_1.o: ejercicio_1.c
 	@gcc -c ejercicio_1.c
 
 clean: 
-	@rm *.o
+	rm -f *.o
