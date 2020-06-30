@@ -15,3 +15,6 @@ Ejercicio5_Client: ejercicio5_client.o lista.o fechas.o
 ejercicio5_client.o: ejercicio5_client.c
 lista.o: lista.c
 fechas.o: fechas.c
+
+clean:
+	rm -f *.o
