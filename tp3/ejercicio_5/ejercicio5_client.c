@@ -565,15 +565,29 @@ void print_menu_doc(){
 
 void ayuda(){
     printf("\n######    HELP Ejercicio5_Client    ######\n\n");
-    printf("Este programa dado dos parámetros de entrada: X e Y \n");
-    printf("Controla el uso de memoria y cpu por parte de los procesos cada 1seg.\n\n");
-    printf("Verificando que no se exceda del valor limite X e Y ingresado.\n");
-    printf("En caso de que un proceso supere esos limites\n");
-    printf("se lo registrara en un archivo: %s \n");
-    printf("\n");
-    printf("Para ejecutar el programa: \"./Ejercicio_4 X Y\",\n");
-    printf("donde X (limite de memoria) debe ser un float mayor a cero.\n");
-    printf("donde y (limite de cpu) debe ser un float mayor a cero.\n\n");
-    printf("El programa quedara ejecutando en segundo plano.\n");
-    printf("Para terminar el programa utilize la señal SIGUSR1.\n\n");
+    printf("Este programa dado dos parámetros de entrada: IP y PORT \n");
+    printf("Se conecta con el servidor establecido en la IP y PORT dados\n");
+    printf("y dependiendo del ROL del usuario (Alumno o Docente) se le\n");
+    printf("presentarán las siguientes opciones: \n\n");
+    printf("Docente:\n");
+    printf("-Consultar asistencias de sus alumnos: \n");
+    printf("\tEnviará como parámetro la fecha (formato\n");
+    printf("\tde todas las fechas yyyy-mm-dd) a consultar,\n");
+    printf("\ty se imprimirá por pantalla el listado de\n");
+    printf("\talumnos del curso asignado mostrando el presentismo correspondiente.\n");
+    printf("-Cargar asistencias:\n");
+    printf("\tComo primer paso escribirá la fecha de asistencia\n");
+    printf("\ty luego se imprimirá por pantalla (de uno a la vez)\n");
+    printf("\tlos nombres de todos los alumnos asociados a esa comisión.\n");
+    printf("\tEl docente deberá indicar si están presentes o no\n");
+    printf("\tcompletando con la letra P o A en cada caso.\n\n");
+    printf("Alumno:\n");
+    printf("-Consultar si asistió determinado día\n");
+    printf("\tEnviará como parámetro la fecha (formato\n");
+    printf("\tde todas las fechas yyyy-mm-dd) a consultar,\n");
+    printf("\ty se imprimirá por pantalla \"Presente\" o \"Ausente\".\n");
+    printf("-Consultar el porcentaje de asistencias inasistencias\n");
+    printf("\tImprimirá por pantalla los porcentajes de asistencias\n");
+    printf("\te inasistencias del alumno.\n");
+    printf("\nEjemplo: ./Ejercicio5_Client IP PORT\n");
 }

@@ -33,7 +33,7 @@ int conectados=0;
 int escuchar=1;
 FILE* registro;
 
-void ayuda(){printf("\nAIUDAAAAAAAA\n");}
+void ayuda();
 int abrir_socket();
 void conectar_puerto(int ,int );
 void* atender_cliente(void* args);
@@ -650,4 +650,16 @@ void* atender_cliente(void* args) // Funcion que se encarga de escuchar la consu
 	pthread_mutex_unlock(&mutex);
     close(client.id_socket); //Cierro el socket del cliente
 	pthread_exit((void*) 0);
+}
+
+void ayuda(){
+    printf("\n######    HELP Ejercicio5_Server    ######\n\n");
+    printf("Este programa dado un parámetro de entrada: PORT \n");
+    printf("Pone en funcionamiento en 2do plano un servidor en el PORT dado\n");
+    printf("y recibe peticiones de los clientes que se conecten a él,\n");
+    printf("los cuales pueden ser 15 como máximo.\n\n");
+    printf("Se imprimirán por pantalla y en el archivo registro.log:\n");
+    printf("todas las conexiónes al servidor como también toda la\n");
+    printf("información recibida y enviada por este.\n");
+    printf("\nEjemplo: ./Ejercicio5_Server PORT\n");
 }
